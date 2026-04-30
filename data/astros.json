@@ -1,0 +1,13 @@
+{
+    "astros": [
+        {"nombre": "Luna", "puntos": 100, "texto": "Es blanca"},
+        {"nombre": "Marte", "puntos": 200, "texto": "Es rojo"},
+        {"nombre": "Saturno", "puntos": 300, "texto": "Tiene Anillos"},
+        {"nombre": "Luna", "puntos": 100, "texto": "Es blanca"},
+        {"nombre": "Marte", "puntos": 200, "texto": "Es rojo"},
+        {"nombre": "Saturno", "puntos": 300, "texto": "Tiene Anillos"},
+        {"nombre": "Luna", "puntos": 100, "texto": "Es blanca"},
+        {"nombre": "Marte", "puntos": 200, "texto": "Es rojo"},
+        {"nombre": "Saturno", "puntos": 300, "texto": "Tiene Anillos"}
+    ]
+}

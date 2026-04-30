@@ -1,6 +1,7 @@
 import pygame
 import json
 from sys import exit
+from random import randint
 
 class Camara(pygame.sprite.Sprite):
     def __init__(self, limite_ancho, limite_alto):
@@ -8,7 +9,7 @@ class Camara(pygame.sprite.Sprite):
         radio = 50
         color_borde = (0, 255, 0)
         self.image = pygame.Surface((radio * 2, radio * 2), pygame.SRCALPHA)
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center = (ancho/2, alto/2))
         self.velocidad = 4
         self.limite_ancho = limite_ancho
         self.limite_alto = limite_alto
@@ -24,9 +25,7 @@ class Camara(pygame.sprite.Sprite):
         if self.rect.top < 0: 
             self.rect.top = 0
         if self.rect.bottom > self.limite_alto: 
-            self.rect.bottom = self.limite_alto
-        
-        print(f"Derecha: {self.rect.right} | Limite: {self.limite_ancho}")
+            self.rect.bottom = self.limite_alto      
 
     def movimiento(self):
         keys = pygame.key.get_pressed()
@@ -43,6 +42,36 @@ class Camara(pygame.sprite.Sprite):
 
     def update(self):
         self.movimiento()
+
+class Astro(pygame.sprite.Sprite):
+    def __init__(self, astro):
+        super().__init__()
+        radio = 50
+        self.image = pygame.Surface((radio * 2, radio * 2), pygame.SRCALPHA)
+        rect = ''
+        encontrado = False
+        while not encontrado:
+            random_y = randint(0, alto)
+            random_x = randint(0, ancho)
+            position = (random_x, random_y)
+            rect = self.image.get_rect(center = position)
+            colision = False
+            for astro in astros_grupo:
+                if rect.colliderect(astro.rect) or rect.colliderect(camara.sprite.rect):
+                    colision = True
+                    break
+            if not colision:
+                encontrado = True
+        
+        self.rect = rect
+        color_borde = (255, 0, 0)
+        pygame.draw.circle(self.image, color_borde, (radio, radio), radio, 3)
+        pygame.draw.line(self.image, color_borde, (45, 50), (55, 50), 2)
+        pygame.draw.line(self.image, color_borde, (50, 45), (50, 55), 2)
+    
+
+    def update(self):
+        pass
 
 
 def dibujar_controles():
@@ -85,8 +114,10 @@ def mostrar_menu():
     pantalla.blit(scores_title, scores_title_rect)
     dibujar_controles()
 
-
-
+def collision():    
+    colisiones = pygame.sprite.spritecollide(camara.sprite, astros_grupo, False)
+    if colisiones:
+        colisiones[0].kill()
 
 pygame.init()
 ancho = 1280
@@ -118,6 +149,7 @@ datos_teclas = [
     {"img": img_right, "offset": (50, 0)},
     {"img": img_space, "offset": (250, -5)}   
     ]
+
 #Mostrar scores
 scores = []
 with open('data/scores.json', 'r') as f:
@@ -130,6 +162,14 @@ fotos = 5
 camara = pygame.sprite.GroupSingle()
 camara.add(Camara(ancho, alto))
 
+#Astros
+astros = []
+with open("data/astros.json", "r") as f:
+    datos = json.load(f)
+    for item in datos["astros"]:
+        astros.append(item)
+
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -139,6 +179,9 @@ while True:
         if estado_actual == 'menu':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 estado_actual = ESTADO_JUGANDO
+                astros_grupo = pygame.sprite.Group()
+                for astro in astros:
+                    astros_grupo.add(Astro(astro))
         
         elif estado_actual == 'jugando':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -146,6 +189,7 @@ while True:
                 if fotos <= 0:
                     estado_actual = ESTADO_MENU
                     fotos = 5
+                collision()
 
     if estado_actual == 'menu':
         mostrar_menu()
@@ -154,6 +198,7 @@ while True:
         pantalla.fill((120,0,140))
         camara.draw(pantalla)
         camara.update()
+        astros_grupo.draw(pantalla)
 
     pygame.display.update()
     clock.tick(60)
