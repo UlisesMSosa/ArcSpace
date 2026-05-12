@@ -8,6 +8,7 @@
         {"nombre": "Jupiter", "puntos": 600, "texto": "Es rojo"},
         {"nombre": "Saturno", "puntos": 700, "texto": "Tiene Anillos"},
         {"nombre": "Urano", "puntos": 800, "texto": "Es blanca"},
-        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos"}
+        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos"},
+        {"nombre": "Estrella", "puntos": 100, "texto": "Tiene Anillos"}
     ]
 }

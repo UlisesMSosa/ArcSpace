@@ -49,7 +49,7 @@ class Astro(pygame.sprite.Sprite):
         super().__init__()
         self.nombre = astro["nombre"]
         self.puntos = astro["puntos"]
-        self.image = assets_astros[self.nombre].copy() # Usamos copy por si modificamos el alpha
+        self.image = assets_astros[self.nombre].copy()
         self.rect = self.image.get_rect(center = posicion)
         self.seleccionado = False
         self.radio_deteccion = 150
@@ -71,7 +71,6 @@ class Astro(pygame.sprite.Sprite):
             self.image.set_alpha(0)
             self.seleccionado = False
     
-
     def update(self):
         pass
         
@@ -115,6 +114,17 @@ def mostrar_menu():
     pantalla.blit(scores_title, scores_title_rect)
     dibujar_controles()
 
+def crear_astros():
+    posiciones_listas = generar_posiciones_validas(len(astros), 120) # 120px de distancia mín.
+    for i, dato_astro in enumerate(astros):        
+        if i < len(posiciones_listas):
+            pos = posiciones_listas[i]
+        else:
+            pos = (randint(0, ancho), randint(0, alto))                    
+        nuevo_astro = Astro(dato_astro, pos)
+        astros_grupo.add(nuevo_astro)
+
+
 def tomar_foto():    
     colisiones = pygame.sprite.spritecollide(camara.sprite, astros_grupo, False)
     p = 0
@@ -123,6 +133,8 @@ def tomar_foto():
         album.append(colisiones[0].nombre)
         colisiones[0].kill()
         return p
+    else:
+        return p
 
 def colision():
         colisiones = pygame.sprite.spritecollide(camara.sprite, astros_grupo, False)
@@ -130,6 +142,11 @@ def colision():
             return colisiones[0]
         else:
             return None
+
+def mostrar_tiempo(tiempo_restante):
+    score_surf = fuente_normal.render(f'Score: {tiempo_restante}', False, (64,64,64))
+    score_rect = score_surf.get_rect(center = (400, 50))
+    pantalla.blit(score_surf, score_rect)
 
 def generar_posiciones_validas(cantidad, radio_seguridad):
     posiciones = []
@@ -201,15 +218,16 @@ camara.add(Camara(ancho, alto))
 
 #Astros
 assets_astros = {
-    "Luna": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Luna.png").convert_alpha(), (105, 105)),
-    "Marte": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Marte.png").convert_alpha(), (105, 105)),
-    "Mercurio": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Mercurio.png").convert_alpha(), (70, 70)),
-    "Venus": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Venus.png").convert_alpha(), (105, 105)),
-    "Jupiter": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Jupiter.png").convert_alpha(), (154, 154)),
-    "Saturno": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Saturno.png").convert_alpha(), (175, 105)),
-    "Urano": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Urano.png").convert_alpha(), (112, 112)),
-    "Neptuno": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Neptuno.png").convert_alpha(), (112, 112)),
-    "Estacion": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Estacion.png").convert_alpha(), (84, 84)),
+    "Luna": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Luna.png").convert_alpha(), (140, 140)),
+    "Venus": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Venus.png").convert_alpha(), (120, 120)),
+    "Mercurio": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Mercurio.png").convert_alpha(), (100, 100)),
+    "Marte": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Marte.png").convert_alpha(), (90, 90)),
+    "Estacion": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Estacion.png").convert_alpha(), (80, 80)),
+    "Jupiter": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Jupiter.png").convert_alpha(), (70, 70)),
+    "Saturno": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Saturno.png").convert_alpha(), (100, 60)),
+    "Urano": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Urano.png").convert_alpha(), (50, 50)),
+    "Neptuno": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Neptuno.png").convert_alpha(), (45, 45)),
+    "Estrella": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Estrella.png").convert_alpha(), (45, 45)),
     }
 
 astros = []
@@ -224,6 +242,10 @@ astro_actual = None
 #Puntuacion
 puntuacion = 0
 
+#Tiempo
+ticks_inicio = pygame.time.get_ticks()
+tiempo_inicial = 30
+
 #Fotos tomadas
 album = []
 
@@ -236,19 +258,9 @@ while True:
         if estado_actual == 'menu':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 estado_actual = ESTADO_JUGANDO
-                astros_grupo = pygame.sprite.Group()
-                
-                posiciones_listas = generar_posiciones_validas(len(astros), 120) # 120px de distancia mín.
-                for i, dato_astro in enumerate(astros):
-                    # Si no hay suficientes posiciones válidas, usamos una por defecto para no romper el juego
-                    if i < len(posiciones_listas):
-                        pos = posiciones_listas[i]
-                    else:
-                        pos = (randint(0, ancho), randint(0, alto))
-                    
-                    nuevo_astro = Astro(dato_astro, pos)
-                    astros_grupo.add(nuevo_astro)
-        
+                astros_grupo = pygame.sprite.Group()                
+                crear_astros()
+
         elif estado_actual == 'jugando':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 fotos -= 1
@@ -257,6 +269,13 @@ while True:
                     fotos = 5
                 puntuacion += tomar_foto()
 
+        elif estado_actual == 'reporte':
+            for astro in astros_grupo:
+                astro.kill()
+            crear_astros()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                ticks_inicio = pygame.time.get_ticks()
+                estado_actual = ESTADO_JUGANDO
 
     if estado_actual == 'menu':
         mostrar_menu()
@@ -265,6 +284,10 @@ while True:
         pantalla.fill((11, 9, 28))
         camara.draw(pantalla)
         camara.update()
+
+        tiempo_transcurrido = (pygame.time.get_ticks() - ticks_inicio) / 1000
+        tiempo_restante = tiempo_inicial - int(tiempo_transcurrido)
+        mostrar_tiempo(tiempo_restante)
 
         pos_v = camara.sprite.rect.center
         for astro in astros_grupo:
