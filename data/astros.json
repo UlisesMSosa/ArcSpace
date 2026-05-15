@@ -1,6 +1,6 @@
 {
     "astros": [
-        {"nombre": "Luna", "puntos": 100, "texto": "Es blanca", "cantidad": 1, "nivel": 1},
+        {"nombre": "Luna", "puntos": 200, "texto": "Es blanca", "cantidad": 1, "nivel": 1},
         {"nombre": "Estacion", "puntos": 200, "texto": "Es rojo", "cantidad": 1, "nivel": 1},
         {"nombre": "Marte", "puntos": 300, "texto": "Es rojo", "cantidad": 1, "nivel": 2},
         {"nombre": "Venus", "puntos": 400, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 2},

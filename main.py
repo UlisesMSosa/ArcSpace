@@ -98,10 +98,6 @@ def dibujar_controles():
     ancla = (ancho / 2, alto / 1.3)
     texto_mov = fuente_normal.render("MUEVE LA CAMARA Y ENCUENTRA LOS PLANETAS", False, (255,255,255))
     texto_mov_rect = texto_mov.get_rect(midbottom = tuple(a + b for a, b in zip(ancla, (0, -80))))
-    ##texto_inicio = fuente_normal.render("Presione", False, (255,255,255))
-    ##texto_inicio_rect = texto_inicio.get_rect(midbottom = tuple(a + b for a, b in zip(ancla, (250, -80))))
-    ##texto_foto = fuente_normal.render("Para Jugar", False, (255,255,255))
-    ##texto_foto_rect = texto_foto.get_rect(midbottom = tuple(a + b for a, b in zip(ancla, (250, -50)))) 
     
     for t in datos_teclas:
         ancla_flecha = tuple(a + b for a, b in zip(ancla, t["offset"]))
@@ -109,8 +105,26 @@ def dibujar_controles():
         pantalla.blit(t["img"], rectangulo)
     
     pantalla.blit(texto_mov, texto_mov_rect)
-    ##pantalla.blit(texto_inicio, texto_inicio_rect)
-    ##pantalla.blit(texto_foto, texto_foto_rect)
+
+def dibujar_tomar_fotos():
+    ancla = (ancho / 2, alto / 1.3)
+    texto_foto = fuente_normal.render("TOMA FOTOS DEL ESPACIO", False, (255,255,255))
+    texto_foto_rect = texto_foto.get_rect(midbottom = tuple(a + b for a, b in zip(ancla, (0, -80))))
+    
+    rect_espacio = img_space.get_rect(center = ancla)
+    pantalla.blit(img_space, rect_espacio)
+    
+    pantalla.blit(texto_foto, texto_foto_rect)
+
+def dibujar_objetivo():
+    ancla = (ancho / 2, alto / 1.3)
+    texto_obj = fuente_normal.render("CADA FOTO TE DA PUNTOS", False, (255,255,255))
+    texto_obj_rect = texto_obj.get_rect(midbottom = tuple(a + b for a, b in zip(ancla, (0, -80))))
+    pantalla.blit(texto_obj, texto_obj_rect)
+    
+    texto_obj2 = fuente_normal.render("COMPLETA EL OBJETIVO PARA PASAR DE NIVEL", False, (255,255,255))
+    texto_obj2_rect = texto_obj2.get_rect(midbottom = tuple(a + b for a, b in zip(ancla, (0, -40))))
+    pantalla.blit(texto_obj2, texto_obj2_rect)
 
 def mostrar_menu():
     global nombre_jugador
@@ -161,7 +175,7 @@ def crear_astros():
 
 def asignar_tiempo_transicion(tiempo_inicio):
     tiempo_transcurrido = (pygame.time.get_ticks() - tiempo_inicio) / 1000
-    tiempo_restante = 5 - int(tiempo_transcurrido)
+    tiempo_restante = 7 - int(tiempo_transcurrido)
     if tiempo_restante <= 0:
         return True
     return False
@@ -170,9 +184,13 @@ def tomar_foto():
     colisiones = pygame.sprite.spritecollide(camara.sprite, astros_grupo, False)
     p = 0
     if colisiones:
-        p = colisiones[0].puntos
-        album.append(colisiones[0].nombre)
-        colisiones[0].kill()
+        astro = colisiones[0]
+        p = astro.puntos
+        album.append({
+            "nombre": astro.nombre,
+            "puntos": astro.puntos
+        })
+        astro.kill()
         return p
     else:
         return p
@@ -203,14 +221,23 @@ def mostrar_tiempo(tiempo_restante):
     pantalla.blit(texto_tiempo, texto_rect)
 
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
+    pygame.draw.rect(pantalla, color, (x, y, fill_width, bar_height), border_radius=10)
 
-def mostrar_camaras():
-    for i in range(fotos):
+def mostrar_camaras(cuantas=None):
+    if cuantas is None:
+        cuantas = fotos
+    texto_fotos = fuente_normal.render("FOTOS", False, (255, 255, 255))
+    texto_rect = texto_fotos.get_rect(topleft=(10, 5))
+    pantalla.blit(texto_fotos, texto_rect)
+    
+    for i in range(cuantas):
         x = 10 + (i * 60)
-        y = 10
+        y = 35
         pantalla.blit(img_camara, (x, y))
 
-def mostrar_puntos_partida():
+def mostrar_puntos_partida(puntuacion_mostrar=None):
+    if puntuacion_mostrar is None:
+        puntuacion_mostrar = puntuacion
     bar_width = 20
     bar_height = int(alto * 0.6)
     x = ancho - 75
@@ -221,6 +248,12 @@ def mostrar_puntos_partida():
     pantalla.blit(texto_puntos, texto_rect)
 
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
+    
+    if objetivo > 0:
+        proporcion = min(puntuacion_mostrar / objetivo, 1)
+        fill_height = int(bar_height * proporcion)
+        fill_y = y + bar_height - fill_height
+        pygame.draw.rect(pantalla, (255, 215, 0), (x, fill_y, bar_width, fill_height), border_radius=10)
 
 def mostrar_flash():
     global flash_activo, flash_tiempo
@@ -275,6 +308,7 @@ ESTADO_MENU = "menu"
 ESTADO_INTERMISION1 = "intermision1"
 ESTADO_INTERMISION2 = "intermision2"
 ESTADO_INTERMISION3 = "intermision3"
+ESTADO_INTERMISION4 = "intermision4"
 ESTADO_JUGANDO = "jugando"
 ESTADO_REPORTE = "reporte"
 
@@ -333,16 +367,24 @@ puntuacion = 0
 
 #Tiempo
 ticks_inicio = pygame.time.get_ticks()
-tiempo_inicial = 10
+tiempo_inicial = 30
 ticks_inicio_juego = 0
 tiempo_inicio_intermision1 = 0
+tiempo_pausado = False
+tiempo_fotos_agotadas = 0
+tipo_pausa = ""
 tiempo_inicio_intermision2 = 0
 tiempo_inicio_intermision3 = 0
+tiempo_inicio_intermision4 = 0
+fotos_tutorial = 5
 #Fotos tomadas
 album = []
 
 ##niveles
 nivel = 1
+
+##Objetivo
+objetivo = 500
 
 ##Nombre jugador
 nombre_jugador = ""
@@ -364,6 +406,9 @@ while True:
                         tiempo_inicio_intermision1 = pygame.time.get_ticks()
                         estado_actual = ESTADO_INTERMISION1
                         astros_grupo = pygame.sprite.Group()
+                        puntuacion = 0
+                        tipo_pausa = ""
+                        fotos_tutorial = 5
                         crear_astros()
                 elif event.key == pygame.K_BACKSPACE:
                     nombre_jugador = nombre_jugador[:-1]
@@ -374,6 +419,8 @@ while True:
 
         elif estado_actual == 'intermision1':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                for astro in astros_grupo:
+                    astro.kill()
                 estado_actual = ESTADO_INTERMISION2
                 tiempo_inicio_intermision2 = pygame.time.get_ticks()
                 camara.sprite.rect.center = (ancho/2, alto/2)
@@ -381,31 +428,72 @@ while True:
 
         elif estado_actual == 'intermision2':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                for astro in astros_grupo:
+                    astro.kill()
+                camara.sprite.rect.center = (ancho // 2, alto // 2)
+                camara.sprite.fotos_tutorial = 5
+                if hasattr(camara.sprite, 'iniciado_tutorial'):
+                    delattr(camara.sprite, 'iniciado_tutorial')
+                if hasattr(camara.sprite, 'astros_demo'):
+                    delattr(camara.sprite, 'astros_demo')
+                if hasattr(camara.sprite, 'indice_astro'):
+                    delattr(camara.sprite, 'indice_astro')
+                if hasattr(camara.sprite, 'foto_tomada'):
+                    delattr(camara.sprite, 'foto_tomada')
                 estado_actual = ESTADO_INTERMISION3
                 tiempo_inicio_intermision3 = pygame.time.get_ticks()
 
         elif estado_actual == 'intermision3':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                for astro in astros_grupo:
+                    astro.kill()
+                camara.sprite.rect.center = (ancho // 2, alto // 2)
+                fotos = 5
+                if hasattr(camara.sprite, 'iniciado_tutorial3'):
+                    delattr(camara.sprite, 'iniciado_tutorial3')
+                if hasattr(camara.sprite, 'indice_astro3'):
+                    delattr(camara.sprite, 'indice_astro3')
+                if hasattr(camara.sprite, 'puntuacion_tutorial'):
+                    delattr(camara.sprite, 'puntuacion_tutorial')
+                if hasattr(camara.sprite, 'foto_tomada3'):
+                    delattr(camara.sprite, 'foto_tomada3')
+                if hasattr(camara.sprite, 'astros_demo3'):
+                    delattr(camara.sprite, 'astros_demo3')
+                tiempo_inicio_intermision4 = pygame.time.get_ticks()
+                estado_actual = ESTADO_INTERMISION4
+
+        elif estado_actual == 'intermision4':
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                fotos = 5
+                camara.sprite.rect.center = (ancho // 2, alto // 2)
                 estado_actual = ESTADO_JUGANDO
                 ticks_inicio_juego = pygame.time.get_ticks()
-                astros_grupo = pygame.sprite.Group()
                 crear_astros()
 
         elif estado_actual == 'jugando':
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not tiempo_pausado:
                 fotos -= 1
                 flash_activo = True
                 flash_tiempo = pygame.time.get_ticks()
-                if fotos <= 0:
-                    estado_actual = ESTADO_REPORTE
-                    fotos = 5
                 puntuacion += tomar_foto()
+                if puntuacion >= objetivo:
+                    tiempo_pausado = True
+                    tipo_pausa = "objetivo"
+                    tiempo_fotos_agotadas = pygame.time.get_ticks()
+                elif fotos <= 0:
+                    tiempo_pausado = True
+                    tipo_pausa = "fotos"
+                    tiempo_fotos_agotadas = pygame.time.get_ticks()
 
         elif estado_actual == 'reporte':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 for astro in astros_grupo:
                     astro.kill()
                 astros_grupo = pygame.sprite.Group()
+                puntuacion = 0
+                tipo_pausa = ""
+                fotos_tutorial = 5
+                camara.sprite.rect.center = (ancho // 2, alto // 2)
                 crear_astros()
                 ticks_inicio_juego = pygame.time.get_ticks()
                 estado_actual = ESTADO_JUGANDO
@@ -425,35 +513,235 @@ while True:
         astros_grupo.draw(pantalla)
 
         if asignar_tiempo_transicion(tiempo_inicio_intermision1):
+            for astro in astros_grupo:
+                astro.kill()
             estado_actual = ESTADO_INTERMISION2
             tiempo_inicio_intermision2 = pygame.time.get_ticks()
             camara.sprite.rect.center = (ancho/2, alto/2)
 
     if estado_actual == "intermision2":
-        for astro in astros_grupo:
-            astro.kill()
-        astros_grupo = pygame.sprite.Group()
-        if asignar_tiempo_transicion(tiempo_inicio_intermision2):
+        tiempo_actual = pygame.time.get_ticks()
+        
+        if not hasattr(camara.sprite, 'iniciado_tutorial'):
+            camara.sprite.iniciado_tutorial = True
+            camara.sprite.indice_astro = 0
+            camara.sprite.fotos_tutorial = 5
+            
+            astros_demo = []
+            posiciones = [
+                (ancho // 2 + 200, alto // 2),
+                (ancho // 2 + 200, alto // 2 - 150),
+                (ancho // 2 - 100, alto // 2 - 50)
+            ]
+            nombres = ["Luna", "Venus", "Mercurio"]
+            
+            for i, (pos, nombre) in enumerate(zip(posiciones, nombres)):
+                astro_demo = pygame.sprite.Sprite()
+                astro_demo.image = assets_astros[nombre].copy()
+                astro_demo.rect = astro_demo.image.get_rect(center = pos)
+                astros_grupo.add(astro_demo)
+                astros_demo.append(astro_demo)
+            
+            camara.sprite.astros_demo = astros_demo
+        
+        astros_demo = camara.sprite.astros_demo
+        indice = camara.sprite.indice_astro
+        
+        for astro in astros_demo:
+            if astro.alive():
+                astro.image.set_alpha(255)
+        
+        if indice < len(astros_demo):
+            astro = astros_demo[indice]
+            
+            dx = astro.rect.centerx - camara.sprite.rect.centerx
+            dy = astro.rect.centery - camara.sprite.rect.centery
+            dist = math.sqrt(dx*dx + dy*dy)
+            
+            if dist > 10:
+                if abs(dx) > abs(dy):
+                    if dx < 0:
+                        camara.sprite.rect.x -= 2
+                    else:
+                        camara.sprite.rect.x += 2
+                else:
+                    if dy < 0:
+                        camara.sprite.rect.y -= 2
+                    else:
+                        camara.sprite.rect.y += 2
+            else:
+                if not hasattr(camara.sprite, 'foto_tomada'):
+                    camara.sprite.foto_tomada = True
+                    flash_activo = True
+                    flash_tiempo = tiempo_actual
+                    fotos_tutorial -= 1
+                    camara.sprite.indice_astro += 1
+                    camara.sprite.fotos_tutorial -= 1
+                    astro.kill()
+                    if hasattr(camara.sprite, 'foto_tomada'):
+                        delattr(camara.sprite, 'foto_tomada')
+        
+        fotos_tutorial = camara.sprite.fotos_tutorial
+        
+        astros_grupo.draw(pantalla)
+        camara.draw(pantalla)
+        dibujar_tomar_fotos()
+        
+        mostrar_camaras(fotos_tutorial)
+        mostrar_flash()
+        
+        if fotos_tutorial == 0 or asignar_tiempo_transicion(tiempo_inicio_intermision2):
+            fotos = 5
+            for astro in astros_grupo:
+                astro.kill()
+            if hasattr(camara.sprite, 'iniciado_tutorial'):
+                delattr(camara.sprite, 'iniciado_tutorial')
+            if hasattr(camara.sprite, 'indice_astro'):
+                delattr(camara.sprite, 'indice_astro')
+            if hasattr(camara.sprite, 'fotos_tutorial'):
+                delattr(camara.sprite, 'fotos_tutorial')
+            if hasattr(camara.sprite, 'foto_tomada'):
+                delattr(camara.sprite, 'foto_tomada')
+            if hasattr(camara.sprite, 'astros_demo'):
+                delattr(camara.sprite, 'astros_demo')
             estado_actual = ESTADO_INTERMISION3
             tiempo_inicio_intermision3 = pygame.time.get_ticks()
+        else:
+            tiempo_restante = 7 - int((tiempo_actual - tiempo_inicio_intermision2) / 1000)
 
     if estado_actual == "intermision3":
+        tiempo_actual = pygame.time.get_ticks()
+        
+        if not hasattr(camara.sprite, 'iniciado_tutorial3'):
+            camara.sprite.iniciado_tutorial3 = True
+            camara.sprite.indice_astro3 = 0
+            camara.sprite.puntuacion_tutorial = 0
+            
+            astros_demo3 = []
+            posiciones3 = [
+                (ancho // 2 + 200, alto // 2),
+                (ancho // 2 - 150, alto // 2 - 80),
+                (ancho // 2 + 100, alto // 2 - 120)
+            ]
+            nombres3 = ["Luna", "Marte", "Venus"]
+            
+            for pos, nombre in zip(posiciones3, nombres3):
+                astro_demo3 = pygame.sprite.Sprite()
+                astro_demo3.image = assets_astros[nombre].copy()
+                astro_demo3.rect = astro_demo3.image.get_rect(center = pos)
+                astro_demo3.radio_deteccion = 150
+                astro_demo3.image.set_alpha(0)
+                astros_grupo.add(astro_demo3)
+                astros_demo3.append(astro_demo3)
+            
+            camara.sprite.astros_demo3 = astros_demo3
+        
+        astros_demo3 = camara.sprite.astros_demo3
+        indice3 = camara.sprite.indice_astro3
+        
+        if indice3 < len(astros_demo3):
+            astro = astros_demo3[indice3]
+            
+            distancia = math.dist(astro.rect.center, camara.sprite.rect.center)
+            if distancia < astro.radio_deteccion:
+                proporcion = 1 - (distancia / astro.radio_deteccion)            
+                nuevo_alpha = int(proporcion * 255)
+                astro.image.set_alpha(nuevo_alpha)
+            else:
+                astro.image.set_alpha(0)
+            
+            dx = astro.rect.centerx - camara.sprite.rect.centerx
+            dy = astro.rect.centery - camara.sprite.rect.centery
+            dist = math.sqrt(dx*dx + dy*dy)
+            
+            if dist > 10:
+                if abs(dx) > abs(dy):
+                    camara.sprite.rect.x += 2 if dx > 0 else -2
+                else:
+                    camara.sprite.rect.y += 2 if dy > 0 else -2
+            else:
+                if not hasattr(camara.sprite, 'foto_tomada3'):
+                    camara.sprite.foto_tomada3 = True
+                    flash_activo = True
+                    flash_tiempo = tiempo_actual
+                    camara.sprite.puntuacion_tutorial += 100
+                    camara.sprite.indice_astro3 += 1
+                    astro.kill()
+                    delattr(camara.sprite, 'foto_tomada3')
+        
+        astros_grupo.draw(pantalla)
+        camara.draw(pantalla)
+        
+        mostrar_puntos_partida(camara.sprite.puntuacion_tutorial)
+        dibujar_objetivo()
+        
         if asignar_tiempo_transicion(tiempo_inicio_intermision3):
+            for astro in astros_grupo:
+                astro.kill()
+            fotos = 5
+            if hasattr(camara.sprite, 'iniciado_tutorial3'):
+                delattr(camara.sprite, 'iniciado_tutorial3')
+            if hasattr(camara.sprite, 'indice_astro3'):
+                delattr(camara.sprite, 'indice_astro3')
+            if hasattr(camara.sprite, 'puntuacion_tutorial'):
+                delattr(camara.sprite, 'puntuacion_tutorial')
+            if hasattr(camara.sprite, 'foto_tomada3'):
+                delattr(camara.sprite, 'foto_tomada3')
+            if hasattr(camara.sprite, 'astros_demo3'):
+                delattr(camara.sprite, 'astros_demo3')
+            tiempo_inicio_intermision4 = pygame.time.get_ticks()
+            estado_actual = ESTADO_INTERMISION4
+
+    if estado_actual == "intermision4":
+        tiempo_transcurrido = (pygame.time.get_ticks() - tiempo_inicio_intermision4) / 1000
+        
+        if tiempo_transcurrido < 1:
+            texto = fuente_titulo.render("PREPARATE", False, (255, 255, 255))
+        elif tiempo_transcurrido < 2:
+            texto = fuente_titulo.render("3", False, (255, 255, 255))
+        elif tiempo_transcurrido < 3:
+            texto = fuente_titulo.render("2", False, (255, 255, 255))
+        elif tiempo_transcurrido < 4:
+            texto = fuente_titulo.render("1", False, (255, 255, 255))
+        elif tiempo_transcurrido < 5:
+            texto = fuente_titulo.render("A JUGAR", False, (0, 255, 0))
+        else:
+            fotos = 5
+            camara.sprite.rect.center = (ancho // 2, alto // 2)
             estado_actual = ESTADO_JUGANDO
             ticks_inicio_juego = pygame.time.get_ticks()
             crear_astros()
+        
+        if estado_actual == "intermision4":
+            texto_rect = texto.get_rect(center=(ancho // 2, alto // 2))
+            pantalla.blit(texto, texto_rect)
 
     if estado_actual == 'jugando':
-        camara.update()
-
-        tiempo_transcurrido = (pygame.time.get_ticks() - ticks_inicio_juego) / 1000
-        tiempo_restante = tiempo_inicial - tiempo_transcurrido
-        if tiempo_restante <= 0:
-            estado_actual = ESTADO_REPORTE
+        mostrar_puntos_partida()
+        
+        if tiempo_pausado:
+            delay = 2000
+            if pygame.time.get_ticks() - tiempo_fotos_agotadas > delay:
+                estado_actual = ESTADO_REPORTE
+                fotos = 5
+                tiempo_pausado = False
+            else:
+                if tipo_pausa == "objetivo":
+                    texto_fotos = fuente_titulo.render("OBJETIVO CUMPLIDO", False, (255, 215, 0))
+                else:
+                    texto_fotos = fuente_titulo.render("FOTOS AGOTADAS", False, (255, 0, 0))
+                texto_rect = texto_fotos.get_rect(center = (ancho // 2, alto // 2))
+                pantalla.blit(texto_fotos, texto_rect)
         else:
-            mostrar_tiempo(tiempo_restante)
-            mostrar_puntos_partida()
-            mostrar_camaras()
+            camara.update()
+
+            tiempo_transcurrido = (pygame.time.get_ticks() - ticks_inicio_juego) / 1000
+            tiempo_restante = tiempo_inicial - tiempo_transcurrido
+            if tiempo_restante <= 0:
+                estado_actual = ESTADO_REPORTE
+            else:
+                mostrar_tiempo(tiempo_restante)
+                mostrar_camaras()
         
 
         pos_v = camara.sprite.rect.center
@@ -463,7 +751,8 @@ while True:
 
         astros_grupo.draw(pantalla)
         astro_actual = colision()
-        camara.draw(pantalla)
+        if not tiempo_pausado:
+            camara.draw(pantalla)
         mostrar_flash()
 
 
