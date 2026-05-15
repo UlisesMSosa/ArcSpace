@@ -85,7 +85,7 @@ class Astro(pygame.sprite.Sprite):
             if proporcion > 0.8:
                 self.seleccionado = True 
             else:
-                False
+                self.seleccionado = False
         else:
             self.image.set_alpha(0)
             self.seleccionado = False
@@ -113,8 +113,9 @@ def dibujar_controles():
     ##pantalla.blit(texto_foto, texto_foto_rect)
 
 def mostrar_menu():
-    nombre = fuente_titulo.render("ArcSpace", False, (255,255,255))
-    nombre_rect = nombre.get_rect(center = (ancho / 2, alto / 8))
+    global nombre_jugador
+    titulo = fuente_titulo.render("ArcSpace", False, (255,255,255))
+    titulo_rect = titulo.get_rect(center = (ancho / 2, alto / 8))
     scores_title = fuente_normal.render("Puntajes", False, (255,0,0))
     scores_title_rect = scores_title.get_rect(midleft = (ancho / 1.31 , alto / 7))
 
@@ -128,24 +129,42 @@ def mostrar_menu():
         score_rect = score_surf.get_rect(topleft = posicion_final)
         pantalla.blit(score_surf, score_rect)
 
-    pantalla.blit(nombre, nombre_rect)
+    pantalla.blit(titulo, titulo_rect)
     pantalla.blit(scores_title, scores_title_rect)
 
-def crear_astros():
-    posiciones_listas = generar_posiciones_validas(len(astros), 120) # 120px de distancia mín.
-    for i, dato_astro in enumerate(astros):        
-        if i < len(posiciones_listas):
-            pos = posiciones_listas[i]
-        else:
-            pos = (randint(0, ancho), randint(0, alto))                    
-        nuevo_astro = Astro(dato_astro, pos)
-        astros_grupo.add(nuevo_astro)
+    input_label = fuente_media.render("INGRESA TU NOMBRE", False, (255,255,255))
+    input_label_rect = input_label.get_rect(center = (ancho / 2, alto / 2))
+    pantalla.blit(input_label, input_label_rect)
 
-def asignar_tiempo_transicion(ticks_intermision):
-    tiempo_transcurrido = (pygame.time.get_ticks() - ticks_intermision) / 1000
-    tiempo_restante = tiempo_intermision - int(tiempo_transcurrido)
+    nombre_ingresado = fuente_titulo.render(nombre_jugador, False, (150, 50, 200))
+    nombre_ingresado_rect = nombre_ingresado.get_rect(center = (ancho / 2, alto / 2 + 70))
+    pantalla.blit(nombre_ingresado, nombre_ingresado_rect)
+
+    instruccion = fuente_media.render("PRESIONE ESPACIO PARA INICIAR", False, (255,255,255))
+    instruccion_rect = instruccion.get_rect(center = (ancho / 2, alto / 2 + 140))
+    pantalla.blit(instruccion, instruccion_rect)
+
+def crear_astros():
+    astros_nivel = [a for a in astros if a.get("nivel") == nivel]
+    total_cantidad = sum(a.get("cantidad", 1) for a in astros_nivel)
+    posiciones_listas = generar_posiciones_validas(total_cantidad, 120)
+    for i, dato_astro in enumerate(astros_nivel):
+        cantidad = dato_astro.get("cantidad", 1)
+        for j in range(cantidad):
+            pos_index = i + j
+            if pos_index < len(posiciones_listas):
+                pos = posiciones_listas[pos_index]
+            else:
+                pos = (randint(0, ancho), randint(0, alto))
+            nuevo_astro = Astro(dato_astro, pos)
+            astros_grupo.add(nuevo_astro)
+
+def asignar_tiempo_transicion(tiempo_inicio):
+    tiempo_transcurrido = (pygame.time.get_ticks() - tiempo_inicio) / 1000
+    tiempo_restante = 5 - int(tiempo_transcurrido)
     if tiempo_restante <= 0:
         return True
+    return False
 
 def tomar_foto():    
     colisiones = pygame.sprite.spritecollide(camara.sprite, astros_grupo, False)
@@ -166,9 +185,37 @@ def colision():
             return None
 
 def mostrar_tiempo(tiempo_restante):
-    score_surf = fuente_normal.render(f'Tiempo: {tiempo_restante}', False, (64,64,64))
-    score_rect = score_surf.get_rect(center = (400, 50))
-    pantalla.blit(score_surf, score_rect)
+    tiempo_maximo = tiempo_inicial
+    bar_width = int(ancho * 0.8)
+    bar_height = 20
+    x = (ancho - bar_width) // 2
+    y = alto - 40
+
+    fill_width = int((tiempo_restante / tiempo_maximo) * bar_width)
+
+    if tiempo_restante < tiempo_maximo * 0.2:
+        color = (255, 0, 0)
+    else:
+        color = (255, 255, 255)
+
+    texto_tiempo = fuente_normal.render("TIEMPO", False, (255, 255, 255))
+    texto_rect = texto_tiempo.get_rect(center=(ancho // 2, y - 20))
+    pantalla.blit(texto_tiempo, texto_rect)
+
+    pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
+    pygame.draw.rect(pantalla, color, (x, y, fill_width, bar_height), border_radius=10)
+
+def mostrar_puntos_partida():
+    bar_width = 20
+    bar_height = int(alto * 0.6)
+    x = ancho - 75
+    y = (alto - bar_height) // 2
+
+    texto_puntos = fuente_normal.render("PUNTOS", False, (255, 255, 255))
+    texto_rect = texto_puntos.get_rect(center=(x + bar_width // 2, y - 20))
+    pantalla.blit(texto_puntos, texto_rect)
+
+    pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
 
 def generar_posiciones_validas(cantidad, radio_seguridad):
     posiciones = []
@@ -204,6 +251,7 @@ pygame.display.set_caption("ArcSpace")
 clock = pygame.time.Clock()
 fuente_titulo = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
 fuente_normal = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
+fuente_media = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
 # Estados posibles
 ESTADO_MENU = "menu"
 ESTADO_INTERMISION1 = "intermision1"
@@ -261,34 +309,65 @@ with open("data/astros.json", "r") as f:
     for item in datos["astros"]:
         astros.append(item)
 
-astro_en_foco = None
-astro_actual = None
 
 #Puntuacion
 puntuacion = 0
 
 #Tiempo
 ticks_inicio = pygame.time.get_ticks()
-tiempo_inicial = 30
-tiempo_intermision = 5
-ticks_intermision = 0
-
+tiempo_inicial = 10
+ticks_inicio_juego = 0
+tiempo_inicio_intermision1 = 0
+tiempo_inicio_intermision2 = 0
+tiempo_inicio_intermision3 = 0
 #Fotos tomadas
 album = []
 
-while True:
+##niveles
+nivel = 1
 
+##Nombre jugador
+nombre_jugador = ""
+
+while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
         
         if estado_actual == 'menu':
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                estado_actual = ESTADO_INTERMISION1
-                astros_grupo = pygame.sprite.Group()                
-                crear_astros()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if nombre_jugador:
+                        tiempo_inicio_intermision1 = pygame.time.get_ticks()
+                        estado_actual = ESTADO_INTERMISION1
+                        astros_grupo = pygame.sprite.Group()
+                        crear_astros()
+                elif event.key == pygame.K_BACKSPACE:
+                    nombre_jugador = nombre_jugador[:-1]
+                else:
+                    if len(nombre_jugador) < 10:
+                        nombre_jugador += event.unicode
         
+
+        elif estado_actual == 'intermision1':
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                estado_actual = ESTADO_INTERMISION2
+                tiempo_inicio_intermision2 = pygame.time.get_ticks()
+                camara.sprite.rect.center = (ancho/2, alto/2)
+                
+
+        elif estado_actual == 'intermision2':
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                estado_actual = ESTADO_INTERMISION3
+                tiempo_inicio_intermision3 = pygame.time.get_ticks()
+
+        elif estado_actual == 'intermision3':
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                estado_actual = ESTADO_JUGANDO
+                ticks_inicio_juego = pygame.time.get_ticks()
+                astros_grupo = pygame.sprite.Group()
+                crear_astros()
 
         elif estado_actual == 'jugando':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
@@ -299,11 +378,12 @@ while True:
                 puntuacion += tomar_foto()
 
         elif estado_actual == 'reporte':
-            for astro in astros_grupo:
-                astro.kill()
-            crear_astros()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                ticks_inicio = pygame.time.get_ticks()
+                for astro in astros_grupo:
+                    astro.kill()
+                astros_grupo = pygame.sprite.Group()
+                crear_astros()
+                ticks_inicio_juego = pygame.time.get_ticks()
                 estado_actual = ESTADO_JUGANDO
 
     pantalla.blit(fondo, (0,0))
@@ -317,32 +397,40 @@ while True:
         camara.sprite.automatico()
         pos_v = camara.sprite.rect.center
         for astro in astros_grupo:
-            astro.update_visual(pos_v) 
-
+            astro.update_visual(pos_v)
         astros_grupo.draw(pantalla)
-        if asignar_tiempo_transicion(tiempo_inicial):
+
+        if asignar_tiempo_transicion(tiempo_inicio_intermision1):
             estado_actual = ESTADO_INTERMISION2
-            ticks_intermision = pygame.time.get_ticks()
+            tiempo_inicio_intermision2 = pygame.time.get_ticks()
             camara.sprite.rect.center = (ancho/2, alto/2)
 
     if estado_actual == "intermision2":
-        if asignar_tiempo_transicion(ticks_intermision):
+        for astro in astros_grupo:
+            astro.kill()
+        astros_grupo = pygame.sprite.Group()
+        if asignar_tiempo_transicion(tiempo_inicio_intermision2):
             estado_actual = ESTADO_INTERMISION3
-            ticks_intermision = pygame.time.get_ticks()
-    
+            tiempo_inicio_intermision3 = pygame.time.get_ticks()
+
     if estado_actual == "intermision3":
-        if asignar_tiempo_transicion(ticks_intermision):
+        if asignar_tiempo_transicion(tiempo_inicio_intermision3):
             estado_actual = ESTADO_JUGANDO
-            ticks_intermision = pygame.time.get_ticks()
+            ticks_inicio_juego = pygame.time.get_ticks()
             crear_astros()
 
     if estado_actual == 'jugando':
         camara.draw(pantalla)
         camara.update()
 
-        tiempo_transcurrido = (pygame.time.get_ticks() - ticks_intermision) / 1000
-        tiempo_restante = tiempo_inicial - int(tiempo_transcurrido)
-        mostrar_tiempo(tiempo_restante)
+        tiempo_transcurrido = (pygame.time.get_ticks() - ticks_inicio_juego) / 1000
+        tiempo_restante = tiempo_inicial - tiempo_transcurrido
+        if tiempo_restante <= 0:
+            estado_actual = ESTADO_REPORTE
+        else:
+            mostrar_tiempo(tiempo_restante)
+            mostrar_puntos_partida()
+        
 
         pos_v = camara.sprite.rect.center
         
@@ -351,15 +439,6 @@ while True:
 
         astros_grupo.draw(pantalla)
         astro_actual = colision()
-
-        # if astro_actual != astro_en_foco:   
-        #     if astro_en_foco is not None:
-        #         astro_en_foco.seleccionado = False
-            
-        #     if astro_actual is not None:
-        #         astro_actual.seleccionado = True
-        #         print(f"Enfocando: {astro_actual.nombre}")
-        #     astro_en_foco = astro_actual
 
 
     if estado_actual == 'reporte':

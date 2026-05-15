@@ -1,14 +1,14 @@
 {
     "astros": [
-        {"nombre": "Luna", "puntos": 100, "texto": "Es blanca"},
-        {"nombre": "Estacion", "puntos": 200, "texto": "Es rojo"},
-        {"nombre": "Marte", "puntos": 300, "texto": "Es rojo"},
-        {"nombre": "Venus", "puntos": 400, "texto": "Tiene Anillos"},
-        {"nombre": "Mercurio", "puntos": 500, "texto": "Es blanca"},
-        {"nombre": "Jupiter", "puntos": 600, "texto": "Es rojo"},
-        {"nombre": "Saturno", "puntos": 700, "texto": "Tiene Anillos"},
-        {"nombre": "Urano", "puntos": 800, "texto": "Es blanca"},
-        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos"},
-        {"nombre": "Estrella", "puntos": 100, "texto": "Tiene Anillos"}
+        {"nombre": "Luna", "puntos": 100, "texto": "Es blanca", "cantidad": 1, "nivel": 1},
+        {"nombre": "Estacion", "puntos": 200, "texto": "Es rojo", "cantidad": 1, "nivel": 1},
+        {"nombre": "Marte", "puntos": 300, "texto": "Es rojo", "cantidad": 1, "nivel": 2},
+        {"nombre": "Venus", "puntos": 400, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 2},
+        {"nombre": "Mercurio", "puntos": 500, "texto": "Es blanca", "cantidad": 1, "nivel": 2},
+        {"nombre": "Jupiter", "puntos": 600, "texto": "Es rojo", "cantidad": 1, "nivel": 3},
+        {"nombre": "Saturno", "puntos": 700, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 3},
+        {"nombre": "Urano", "puntos": 800, "texto": "Es blanca", "cantidad": 1, "nivel": 3},
+        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 4},
+        {"nombre": "Estrella", "puntos": 100, "texto": "Tiene Anillos", "cantidad": 5, "nivel": 1}
     ]
 }
