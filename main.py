@@ -203,7 +203,12 @@ def mostrar_tiempo(tiempo_restante):
     pantalla.blit(texto_tiempo, texto_rect)
 
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
-    pygame.draw.rect(pantalla, color, (x, y, fill_width, bar_height), border_radius=10)
+
+def mostrar_camaras():
+    for i in range(fotos):
+        x = 10 + (i * 60)
+        y = 10
+        pantalla.blit(img_camara, (x, y))
 
 def mostrar_puntos_partida():
     bar_width = 20
@@ -217,6 +222,17 @@ def mostrar_puntos_partida():
 
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
 
+def mostrar_flash():
+    global flash_activo, flash_tiempo
+    if flash_activo:
+        flash_surface = pygame.Surface((ancho, alto))
+        flash_surface.fill((220, 220, 220))
+        alpha = max(0, 200 - int((pygame.time.get_ticks() - flash_tiempo) * 5))
+        flash_surface.set_alpha(alpha)
+        pantalla.blit(flash_surface, (0, 0))
+        if alpha <= 0:
+            flash_activo = False
+
 def generar_posiciones_validas(cantidad, radio_seguridad):
     posiciones = []
     intentos_maximos = 100
@@ -226,7 +242,7 @@ def generar_posiciones_validas(cantidad, radio_seguridad):
 
     for _ in range(cantidad):
         for _ in range(intentos_maximos):
-            candidata = pygame.Vector2(randint(100, ancho - 100), randint(100, alto - 100))
+            candidata = pygame.Vector2(randint(350, ancho - 120), randint(80, alto - 100))
             
             # Verificamos si está lo suficientemente lejos de todas las posiciones ya aceptadas
             es_valida = True
@@ -252,6 +268,8 @@ clock = pygame.time.Clock()
 fuente_titulo = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
 fuente_normal = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
 fuente_media = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
+
+img_camara = pygame.transform.scale(pygame.image.load("assets/Graphics/Camara.png").convert_alpha(), (60, 60))
 # Estados posibles
 ESTADO_MENU = "menu"
 ESTADO_INTERMISION1 = "intermision1"
@@ -329,6 +347,10 @@ nivel = 1
 ##Nombre jugador
 nombre_jugador = ""
 
+##Flash
+flash_activo = False
+flash_tiempo = 0
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -372,6 +394,8 @@ while True:
         elif estado_actual == 'jugando':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 fotos -= 1
+                flash_activo = True
+                flash_tiempo = pygame.time.get_ticks()
                 if fotos <= 0:
                     estado_actual = ESTADO_REPORTE
                     fotos = 5
@@ -420,7 +444,6 @@ while True:
             crear_astros()
 
     if estado_actual == 'jugando':
-        camara.draw(pantalla)
         camara.update()
 
         tiempo_transcurrido = (pygame.time.get_ticks() - ticks_inicio_juego) / 1000
@@ -430,6 +453,7 @@ while True:
         else:
             mostrar_tiempo(tiempo_restante)
             mostrar_puntos_partida()
+            mostrar_camaras()
         
 
         pos_v = camara.sprite.rect.center
@@ -439,6 +463,8 @@ while True:
 
         astros_grupo.draw(pantalla)
         astro_actual = colision()
+        camara.draw(pantalla)
+        mostrar_flash()
 
 
     if estado_actual == 'reporte':
