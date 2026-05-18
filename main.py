@@ -159,6 +159,7 @@ def mostrar_menu():
     pantalla.blit(instruccion, instruccion_rect)
 
 def crear_astros():
+    global nivel
     astros_nivel = [a for a in astros if a.get("nivel") == nivel]
     total_cantidad = sum(a.get("cantidad", 1) for a in astros_nivel)
     posiciones_listas = generar_posiciones_validas(total_cantidad, 120)
@@ -266,6 +267,46 @@ def mostrar_flash():
         if alpha <= 0:
             flash_activo = False
 
+def mostrar_reporte():
+    global nivel
+    rect_ancho = int(ancho * 0.9)
+    rect_alto = 200
+    x = (ancho - rect_ancho) // 2
+    y = 20
+    pygame.draw.rect(pantalla, (48, 39, 38), (x, y, rect_ancho, rect_alto), border_radius=20)
+
+    if album:
+        tamano_foto = 120
+        espacio = 20
+        total_fotos = len(album)
+        ancho_total = total_fotos * tamano_foto + (total_fotos - 1) * espacio
+        inicio_x = x + (rect_ancho - ancho_total) // 2
+        y_foto = y + (rect_alto - tamano_foto) // 2
+        
+        for i, item in enumerate(album):
+            img = assets_astros.get(item["nombre"])
+            if img:
+                img_redim = pygame.transform.scale(img, (tamano_foto, tamano_foto))
+                pos_x = inicio_x + i * (tamano_foto + espacio)
+                pygame.draw.rect(pantalla, (212, 193, 190), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), border_radius=2)
+                pygame.draw.rect(pantalla, (0, 0, 0), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), 3, border_radius=2)
+                pantalla.blit(img_redim, (pos_x, y_foto))
+
+    if puntuacion >= objetivo:
+        texto = fuente_normal.render("Avanzar al siguiente nivel", False, (255, 215, 0))
+    else:
+        texto = fuente_normal.render("Intentar de nuevo", False, (255, 0, 0))
+    texto_rect = texto.get_rect(center=(ancho // 2, alto // 2))
+    pantalla.blit(texto, texto_rect)
+    img_space_rect = img_space.get_rect(center=(ancho // 2, alto // 2 + 50))
+    pantalla.blit(img_space, img_space_rect)
+    texto_menu = fuente_pequena.render("Volver al menu", False, (255, 255, 255))
+    texto_rect = texto_menu.get_rect(left=20, centery=alto - 30)
+    pantalla.blit(texto_menu, texto_rect)
+    img_m_redim = pygame.transform.scale(img_m, (30, 30))
+    img_m_rect = img_m_redim.get_rect(left=texto_rect.right + 10, centery=alto - 30)
+    pantalla.blit(img_m_redim, img_m_rect)
+
 def generar_posiciones_validas(cantidad, radio_seguridad):
     posiciones = []
     intentos_maximos = 100
@@ -301,6 +342,7 @@ clock = pygame.time.Clock()
 fuente_titulo = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
 fuente_normal = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
 fuente_media = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
+fuente_pequena = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 20)
 
 img_camara = pygame.transform.scale(pygame.image.load("assets/Graphics/Camara.png").convert_alpha(), (60, 60))
 # Estados posibles
@@ -322,6 +364,7 @@ img_down = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_
 img_left = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_left.png").convert_alpha()
 img_right = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_right.png").convert_alpha()
 img_space = pygame.image.load("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png").convert_alpha()
+img_m = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_m.png").convert_alpha()
 datos_teclas = [
     {"img": img_up, "offset": (0, -50)},   
     {"img": img_down, "offset": (0, 0)},  
@@ -379,6 +422,7 @@ tiempo_inicio_intermision4 = 0
 fotos_tutorial = 5
 #Fotos tomadas
 album = []
+coleccion = []
 
 ##niveles
 nivel = 1
@@ -487,16 +531,41 @@ while True:
 
         elif estado_actual == 'reporte':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                for astro in astros_grupo:
-                    astro.kill()
-                astros_grupo = pygame.sprite.Group()
+                if puntuacion >= objetivo:
+                    nivel += 1
+                    coleccion.extend(album)
+                    album.clear()
+                    astros_nivel_nuevo = [a for a in astros if a.get("nivel") == nivel]
+                    total_cantidad = sum(a.get("cantidad", 1) for a in astros_nivel_nuevo)
+                    posiciones_listas = generar_posiciones_validas(total_cantidad, 120)
+                    for i, dato_astro in enumerate(astros_nivel_nuevo):
+                        cantidad = dato_astro.get("cantidad", 1)
+                        for j in range(cantidad):
+                            pos_index = i + j
+                            if pos_index < len(posiciones_listas):
+                                pos = posiciones_listas[pos_index]
+                            else:
+                                pos = (randint(0, ancho), randint(0, alto))
+                            nuevo_astro = Astro(dato_astro, pos)
+                            astros_grupo.add(nuevo_astro)
+                else:
+                    album.clear()
+                    coleccion.clear()
+                    for astro in astros_grupo:
+                        astro.kill()
+                    astros_grupo = pygame.sprite.Group()
+                    crear_astros()
                 puntuacion = 0
                 tipo_pausa = ""
                 fotos_tutorial = 5
                 camara.sprite.rect.center = (ancho // 2, alto // 2)
-                crear_astros()
                 ticks_inicio_juego = pygame.time.get_ticks()
                 estado_actual = ESTADO_JUGANDO
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                album.clear()
+                coleccion.clear()
+                nombre_jugador = ""
+                estado_actual = ESTADO_MENU
 
     pantalla.blit(fondo, (0,0))
 
@@ -674,6 +743,7 @@ while True:
         
         mostrar_puntos_partida(camara.sprite.puntuacion_tutorial)
         dibujar_objetivo()
+        mostrar_flash()
         
         if asignar_tiempo_transicion(tiempo_inicio_intermision3):
             for astro in astros_grupo:
@@ -757,7 +827,7 @@ while True:
 
 
     if estado_actual == 'reporte':
-        pantalla.fill("#000000")   
+        mostrar_reporte()
         
     pygame.display.update()
     clock.tick(60)
