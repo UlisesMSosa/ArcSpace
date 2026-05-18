@@ -9,7 +9,7 @@ class Camara(pygame.sprite.Sprite):
         super().__init__()
         radio = 50
         color_borde = (0, 255, 0)
-        self.image = pygame.Surface((radio * 2, radio * 2), pygame.SRCALPHA)
+        self.image = pygame.Surface((radio * 2, radio * 2 + 20), pygame.SRCALPHA)
         self.rect = self.image.get_rect(center = (ancho/2, alto/2))
         self.velocidad = 4
         self.limite_ancho = limite_ancho
@@ -17,6 +17,12 @@ class Camara(pygame.sprite.Sprite):
         pygame.draw.circle(self.image, color_borde, (radio, radio), radio, 3)
         pygame.draw.line(self.image, color_borde, (45, 50), (55, 50), 2)
         pygame.draw.line(self.image, color_borde, (50, 45), (50, 55), 2)
+        pygame.draw.rect(self.image, (255, 255, 255), (15, 100, 70, 25))
+        if hasattr(self, 'mostrar_texto_foto') and self.mostrar_texto_foto:
+            fuente = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 12)
+            texto = fuente.render("FOTO", False, (0, 0, 0))
+            texto_rect = texto.get_rect(center=(50, 112))
+            self.image.blit(texto, texto_rect)
 
     def controlar_bordes(self):
         if self.rect.left < 0: 
@@ -62,6 +68,21 @@ class Camara(pygame.sprite.Sprite):
 
     def update(self):
         self.movimiento()
+        radio = 50
+        self.image = pygame.Surface((radio * 2 + 100, radio * 2 + 80), pygame.SRCALPHA)
+        color_borde = (0, 255, 0)
+        pygame.draw.circle(self.image, color_borde, (100, 70), radio, 3)
+        pygame.draw.line(self.image, color_borde, (95, 70), (105, 70), 2)
+        pygame.draw.line(self.image, color_borde, (100, 65), (100, 75), 2)
+        if estado_actual == ESTADO_JUGANDO:
+            if hasattr(self, 'mostrar_texto_foto') and self.mostrar_texto_foto:
+                if pygame.time.get_ticks() - self.tiempo_foto > 500:
+                    self.mostrar_texto_foto = False
+                else:
+                    fuente = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 32)
+                    texto = fuente.render(self.texto_foto, False, self.color_texto_foto)
+                    texto_rect = texto.get_rect(center=(100, 140))
+                    self.image.blit(texto, texto_rect)
 
 class Astro(pygame.sprite.Sprite):
     def __init__(self, astro, posicion):
@@ -191,9 +212,25 @@ def tomar_foto():
             "nombre": astro.nombre,
             "puntos": astro.puntos
         })
+        dx = (camara.sprite.rect.x + 100) - astro.rect.centerx
+        dy = (camara.sprite.rect.y + 70) - astro.rect.centery
+        distancia = math.sqrt(dx*dx + dy*dy)
+        
+        camara.sprite.mostrar_texto_foto = True
+        camara.sprite.tiempo_foto = pygame.time.get_ticks()
+        if distancia < 30:
+            camara.sprite.texto_foto = "PERFECTO"
+            camara.sprite.color_texto_foto = (128, 0, 128)
+        else:
+            camara.sprite.texto_foto = "BIEN"
+            camara.sprite.color_texto_foto = (0, 255, 0)
         astro.kill()
         return p
     else:
+        camara.sprite.mostrar_texto_foto = True
+        camara.sprite.tiempo_foto = pygame.time.get_ticks()
+        camara.sprite.texto_foto = "MAL"
+        camara.sprite.color_texto_foto = (255, 0, 0)
         return p
 
 def colision():
@@ -574,6 +611,7 @@ while True:
     
     if estado_actual == "intermision1":
         dibujar_controles()
+        camara.sprite.update()
         camara.draw(pantalla)
         camara.sprite.automatico()
         pos_v = camara.sprite.rect.center
@@ -653,6 +691,7 @@ while True:
         fotos_tutorial = camara.sprite.fotos_tutorial
         
         astros_grupo.draw(pantalla)
+        camara.sprite.update()
         camara.draw(pantalla)
         dibujar_tomar_fotos()
         
@@ -739,6 +778,7 @@ while True:
                     delattr(camara.sprite, 'foto_tomada3')
         
         astros_grupo.draw(pantalla)
+        camara.sprite.update()
         camara.draw(pantalla)
         
         mostrar_puntos_partida(camara.sprite.puntuacion_tutorial)
