@@ -25,14 +25,14 @@ class Camara(pygame.sprite.Sprite):
             self.image.blit(texto, texto_rect)
 
     def controlar_bordes(self):
-        if self.rect.left < 0: 
-            self.rect.left = 0
-        if self.rect.right > self.limite_ancho: 
-            self.rect.right = self.limite_ancho
-        if self.rect.top < 0: 
-            self.rect.top = 0
-        if self.rect.bottom > self.limite_alto: 
-            self.rect.bottom = self.limite_alto      
+        if self.rect.left < -80: 
+            self.rect.left = -80
+        if self.rect.right > self.limite_ancho + 80: 
+            self.rect.right = self.limite_ancho + 80
+        if self.rect.top < -70: 
+            self.rect.top = -70
+        if self.rect.bottom > self.limite_alto + 70: 
+            self.rect.bottom = self.limite_alto + 70      
 
     def movimiento(self):
         keys = pygame.key.get_pressed()
@@ -344,26 +344,31 @@ def mostrar_reporte():
     img_m_rect = img_m_redim.get_rect(left=texto_rect.right + 10, centery=alto - 30)
     pantalla.blit(img_m_redim, img_m_rect)
 
-def generar_posiciones_validas(cantidad, radio_seguridad):
+def generar_posiciones_validas(cantidad, radio_seguridad, posiciones_extras=None):
     posiciones = []
     intentos_maximos = 100
     
     # Agregamos la posición de la cámara para que nada nazca encima del jugador
     posiciones.append(pygame.Vector2(ancho // 2, alto // 2))
+    
+    # Agregamos posiciones extras si se proporcionan (como astros existentes)
+    if posiciones_extras:
+        for pos in posiciones_extras:
+            posiciones.append(pygame.Vector2(pos))
 
     for _ in range(cantidad):
         for _ in range(intentos_maximos):
-            candidata = pygame.Vector2(randint(350, ancho - 120), randint(80, alto - 100))
+            candidatura = pygame.Vector2(randint(350, ancho - 120), randint(80, alto - 100))
             
             # Verificamos si está lo suficientemente lejos de todas las posiciones ya aceptadas
             es_valida = True
             for p in posiciones:
-                if candidata.distance_to(p) < radio_seguridad:
+                if candidatura.distance_to(p) < radio_seguridad:
                     es_valida = False
                     break
             
             if es_valida:
-                posiciones.append(candidata)
+                posiciones.append(candidatura)
                 break
                 
     # Quitamos la posición de la cámara antes de devolver la lista
@@ -574,20 +579,22 @@ while True:
                     album.clear()
                     astros_nivel_nuevo = [a for a in astros if a.get("nivel") == nivel]
                     total_cantidad = sum(a.get("cantidad", 1) for a in astros_nivel_nuevo)
-                    posiciones_listas = generar_posiciones_validas(total_cantidad, 120)
+                    posiciones_astros_existentes = [astro.rect.center for astro in astros_grupo]
+                    posiciones_listas = generar_posiciones_validas(total_cantidad, 200, posiciones_astros_existentes)
                     for i, dato_astro in enumerate(astros_nivel_nuevo):
                         cantidad = dato_astro.get("cantidad", 1)
                         for j in range(cantidad):
-                            pos_index = i + j
-                            if pos_index < len(posiciones_listas):
-                                pos = posiciones_listas[pos_index]
+                            idx = len(posiciones_listas) - total_cantidad + i + j
+                            if 0 <= idx < len(posiciones_listas):
+                                pos = posiciones_listas[idx]
                             else:
-                                pos = (randint(0, ancho), randint(0, alto))
+                                pos = (ancho // 2, alto // 2)
                             nuevo_astro = Astro(dato_astro, pos)
                             astros_grupo.add(nuevo_astro)
                 else:
                     album.clear()
                     coleccion.clear()
+                    nivel = 1
                     for astro in astros_grupo:
                         astro.kill()
                     astros_grupo = pygame.sprite.Group()
@@ -595,12 +602,14 @@ while True:
                 puntuacion = 0
                 tipo_pausa = ""
                 fotos_tutorial = 5
+                fotos = 5
                 camara.sprite.rect.center = (ancho // 2, alto // 2)
                 ticks_inicio_juego = pygame.time.get_ticks()
                 estado_actual = ESTADO_JUGANDO
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m:
                 album.clear()
                 coleccion.clear()
+                nivel = 1
                 nombre_jugador = ""
                 estado_actual = ESTADO_MENU
 
