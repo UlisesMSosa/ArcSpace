@@ -1,14 +1,13 @@
 {
     "astros": [
-        {"nombre": "Luna", "puntos": 200, "texto": "Es blanca", "cantidad": 1, "nivel": 1, "real": "Luna-Real"},
-        {"nombre": "Estacion", "puntos": 200, "texto": "Es rojo", "cantidad": 1, "nivel": 1, "real": "Estacion-Real"},
-        {"nombre": "Marte", "puntos": 300, "texto": "Es rojo", "cantidad": 1, "nivel": 2, "real": "Marte-Real"},
-        {"nombre": "Venus", "puntos": 400, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 2, "real": "Venus-Real"},
-        {"nombre": "Mercurio", "puntos": 500, "texto": "Es blanca", "cantidad": 1, "nivel": 2, "real": "Mercurio-Real"},
-        {"nombre": "Jupiter", "puntos": 600, "texto": "Es rojo", "cantidad": 1, "nivel": 3, "real": "Jupiter-Real"},
-        {"nombre": "Saturno", "puntos": 700, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 3, "real": "Saturno-Real"},
-        {"nombre": "Urano", "puntos": 800, "texto": "Es blanca", "cantidad": 1, "nivel": 3, "real": "Urano-Real"},
-        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 4, "real": "Neptuno-Real"},
-        {"nombre": "Estrella", "puntos": 100, "texto": "Tiene Anillos", "cantidad": 5, "nivel": 1, "real": "Estrella-Real"}
+        {"nombre": "Luna", "puntos": 200, "texto": "El unico satelite natural de la Tierra", "cantidad": 1, "nivel": 1, "real": "Luna-Real", "posicion": 0},
+        {"nombre": "Estrella", "puntos": 100, "texto": "Bolas de gas que brillan en el cielo", "cantidad": 5, "nivel": 1, "real": "Estrella-Real", "posicion": 1},
+        {"nombre": "Estacion", "puntos": 200, "texto": "Hogar de astronautas en el espacio", "cantidad": 1, "nivel": 1, "real": "Estacion-Real", "posicion": 2},
+        {"nombre": "Marte", "puntos": 300, "texto": "El planeta rojo, vecino de la Tierra", "cantidad": 1, "nivel": 2, "real": "Marte-Real", "posicion": 3},
+        {"nombre": "Venus", "puntos": 400, "texto": "El planeta mas caliente del sistema solar", "cantidad": 1, "nivel": 2, "real": "Venus-Real", "posicion": 4},
+        {"nombre": "Mercurio", "puntos": 500, "texto": "El planeta mas pequeno y cercano al Sol", "cantidad": 1, "nivel": 2, "real": "Mercurio-Real", "posicion": 5},
+        {"nombre": "Jupiter", "puntos": 600, "texto": "El planeta mas grande de todos", "cantidad": 1, "nivel": 3, "real": "Jupiter-Real", "posicion": 6},
+        {"nombre": "Saturno", "puntos": 700, "texto": "Famoso por sus hermosos anillos", "cantidad": 1, "nivel": 3, "real": "Saturno-Real", "posicion": 7},
+        {"nombre": "Neptuno", "puntos": 900, "texto": "El planeta mas lejano y ventoso", "cantidad": 1, "nivel": 4, "real": "Neptuno-Real"}
     ]
 }
