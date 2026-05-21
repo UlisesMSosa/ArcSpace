@@ -304,16 +304,27 @@ def mostrar_flash():
         if alpha <= 0:
             flash_activo = False
 
+def dibujar_rect_punteado(superficie, color, rect, dash=8):
+    x, y, w, h = rect
+    for i in range(0, w, dash * 2):
+        pygame.draw.line(superficie, color, (x + i, y), (min(x + i + dash, x + w), y))
+    for i in range(0, w, dash * 2):
+        pygame.draw.line(superficie, color, (x + i, y + h), (min(x + i + dash, x + w), y + h))
+    for i in range(0, h, dash * 2):
+        pygame.draw.line(superficie, color, (x, y + i), (x, min(y + i + dash, y + h)))
+    for i in range(0, h, dash * 2):
+        pygame.draw.line(superficie, color, (x + w, y + i), (x + w, min(y + i + dash, y + h)))
+
 def mostrar_reporte():
     global nivel
     rect_ancho = int(ancho * 0.9)
-    rect_alto = 200
+    rect_alto = 110
     x = (ancho - rect_ancho) // 2
-    y = 20
+    y = 0
     pygame.draw.rect(pantalla, (48, 39, 38), (x, y, rect_ancho, rect_alto), border_radius=20)
 
     if album:
-        tamano_foto = 120
+        tamano_foto = 80
         espacio = 20
         total_fotos = len(album)
         ancho_total = total_fotos * tamano_foto + (total_fotos - 1) * espacio
@@ -329,13 +340,35 @@ def mostrar_reporte():
                 pygame.draw.rect(pantalla, (0, 0, 0), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), 3, border_radius=2)
                 pantalla.blit(img_redim, (pos_x, y_foto))
 
+    img_uibook_rect = img_uibook.get_rect(center=(ancho // 2, alto // 2))
+    pantalla.blit(img_uibook, img_uibook_rect)
+
+    rec_w, rec_h = 110, 160
+    gap = 30
+    group_w = 2 * rec_w + gap
+    group_h = 2 * rec_h + gap
+    sep = 150
+    total_w = 2 * group_w + sep
+    start_x = (ancho - total_w) // 2
+    start_y = (alto - group_h) // 2
+    posiciones_fotos_reales = []
+    for i in range(8):
+        group = i // 4
+        idx = i % 4
+        r = idx // 2
+        c = idx % 2
+        rx = start_x + group * (group_w + sep) + c * (rec_w + gap)
+        ry = start_y + r * (rec_h + gap)
+        posiciones_fotos_reales.append(pygame.Rect(rx, ry, rec_w, rec_h))
+        dibujar_rect_punteado(pantalla, (0, 0, 0), (rx, ry, rec_w, rec_h), 8)
+
     if puntuacion >= objetivo:
         texto = fuente_normal.render("Avanzar al siguiente nivel", False, (255, 215, 0))
     else:
         texto = fuente_normal.render("Intentar de nuevo", False, (255, 0, 0))
-    texto_rect = texto.get_rect(center=(ancho // 2, alto // 2))
+    img_space_rect = img_space.get_rect(midbottom=(ancho // 2, alto))
+    texto_rect = texto.get_rect(midbottom=(ancho // 2, img_space_rect.top - 3))
     pantalla.blit(texto, texto_rect)
-    img_space_rect = img_space.get_rect(center=(ancho // 2, alto // 2 + 50))
     pantalla.blit(img_space, img_space_rect)
     texto_menu = fuente_pequena.render("Volver al menu", False, (255, 255, 255))
     texto_rect = texto_menu.get_rect(left=20, centery=alto - 30)
@@ -405,8 +438,10 @@ img_up = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_ar
 img_down = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_down.png").convert_alpha()
 img_left = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_left.png").convert_alpha()
 img_right = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_right.png").convert_alpha()
-img_space = pygame.image.load("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png").convert_alpha()
+img_space_raw = pygame.image.load("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png").convert_alpha()
+img_space = img_space_raw.subsurface((0, 36, 128, 56)).copy()
 img_m = pygame.image.load("assets/Graphics/Keyboard & Mouse/Default/keyboard_m.png").convert_alpha()
+img_uibook = pygame.transform.scale(pygame.image.load("assets/Graphics/UIBook.png").convert_alpha(), (830, 500))
 datos_teclas = [
     {"img": img_up, "offset": (0, -50)},   
     {"img": img_down, "offset": (0, 0)},  
