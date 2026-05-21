@@ -1,14 +1,14 @@
 {
     "astros": [
-        {"nombre": "Luna", "puntos": 200, "texto": "Es blanca", "cantidad": 1, "nivel": 1},
-        {"nombre": "Estacion", "puntos": 200, "texto": "Es rojo", "cantidad": 1, "nivel": 1},
-        {"nombre": "Marte", "puntos": 300, "texto": "Es rojo", "cantidad": 1, "nivel": 2},
-        {"nombre": "Venus", "puntos": 400, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 2},
-        {"nombre": "Mercurio", "puntos": 500, "texto": "Es blanca", "cantidad": 1, "nivel": 2},
-        {"nombre": "Jupiter", "puntos": 600, "texto": "Es rojo", "cantidad": 1, "nivel": 3},
-        {"nombre": "Saturno", "puntos": 700, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 3},
-        {"nombre": "Urano", "puntos": 800, "texto": "Es blanca", "cantidad": 1, "nivel": 3},
-        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 4},
-        {"nombre": "Estrella", "puntos": 100, "texto": "Tiene Anillos", "cantidad": 5, "nivel": 1}
+        {"nombre": "Luna", "puntos": 200, "texto": "Es blanca", "cantidad": 1, "nivel": 1, "real": "Luna-Real"},
+        {"nombre": "Estacion", "puntos": 200, "texto": "Es rojo", "cantidad": 1, "nivel": 1, "real": "Estacion-Real"},
+        {"nombre": "Marte", "puntos": 300, "texto": "Es rojo", "cantidad": 1, "nivel": 2, "real": "Marte-Real"},
+        {"nombre": "Venus", "puntos": 400, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 2, "real": "Venus-Real"},
+        {"nombre": "Mercurio", "puntos": 500, "texto": "Es blanca", "cantidad": 1, "nivel": 2, "real": "Mercurio-Real"},
+        {"nombre": "Jupiter", "puntos": 600, "texto": "Es rojo", "cantidad": 1, "nivel": 3, "real": "Jupiter-Real"},
+        {"nombre": "Saturno", "puntos": 700, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 3, "real": "Saturno-Real"},
+        {"nombre": "Urano", "puntos": 800, "texto": "Es blanca", "cantidad": 1, "nivel": 3, "real": "Urano-Real"},
+        {"nombre": "Neptuno", "puntos": 900, "texto": "Tiene Anillos", "cantidad": 1, "nivel": 4, "real": "Neptuno-Real"},
+        {"nombre": "Estrella", "puntos": 100, "texto": "Tiene Anillos", "cantidad": 5, "nivel": 1, "real": "Estrella-Real"}
     ]
 }

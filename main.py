@@ -475,6 +475,19 @@ assets_astros = {
     "Estrella": pygame.transform.scale(pygame.image.load("assets/Graphics/Astros/Estrella.png").convert_alpha(), (45, 45)),
     }
 
+assets_reales = {
+    "Luna": pygame.image.load("assets/Graphics/Reales/Luna-Real.png").convert_alpha(),
+    "Venus": pygame.image.load("assets/Graphics/Reales/Venus-Real.png").convert_alpha(),
+    "Mercurio": pygame.image.load("assets/Graphics/Reales/Mercurio-Real.png").convert_alpha(),
+    "Marte": pygame.image.load("assets/Graphics/Reales/Marte-Real.png").convert_alpha(),
+    "Estacion": pygame.image.load("assets/Graphics/Reales/Estacion-Real.png").convert_alpha(),
+    "Jupiter": pygame.image.load("assets/Graphics/Reales/Jupiter-Real.png").convert_alpha(),
+    "Saturno": pygame.image.load("assets/Graphics/Reales/Saturno-Real.png").convert_alpha(),
+    "Urano": pygame.image.load("assets/Graphics/Reales/Urano-Real.png").convert_alpha(),
+    "Neptuno": pygame.image.load("assets/Graphics/Reales/Neptuno-Real.png").convert_alpha(),
+    "Estrella": pygame.image.load("assets/Graphics/Reales/Estrella-Real.png").convert_alpha(),
+    }
+
 astros = []
 with open("data/astros.json", "r") as f:
     datos = json.load(f)
