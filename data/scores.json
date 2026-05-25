@@ -1,7 +1,149 @@
 {
+    "jugadores": {
+        "Ulises": {
+            "puntuacion_total": 500,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Luna",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 20:56:23",
+            "cantidad_partidas": 2
+        },
+        "ulises": {
+            "puntuacion_total": 400,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 20:59:34",
+            "cantidad_partidas": 1
+        },
+        "Manuel": {
+            "puntuacion_total": 1900,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Venus",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-24 21:08:11",
+            "cantidad_partidas": 1
+        },
+        "sosa": {
+            "puntuacion_total": 3100,
+            "nivel_maximo": 3,
+            "astros_descubiertos": [
+                "Mercurio",
+                "Marte",
+                "Luna",
+                "Saturno",
+                "Estacion",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:16:58",
+            "cantidad_partidas": 1
+        },
+        "asd": {
+            "puntuacion_total": 1900,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Estrella",
+                "Estacion",
+                "Marte",
+                "Venus"
+            ],
+            "fecha_hora": "2026-05-24 21:22:48",
+            "cantidad_partidas": 1
+        }
+    },
+    "partidas": [
+        {
+            "nombre": "Ulises",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-05-24 20:52:06"
+        },
+        {
+            "nombre": "Ulises",
+            "puntuacion_total": 500,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Luna",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 20:56:23"
+        },
+        {
+            "nombre": "ulises",
+            "puntuacion_total": 400,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 20:59:34"
+        },
+        {
+            "nombre": "Manuel",
+            "puntuacion_total": 1900,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Venus",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-24 21:08:11"
+        },
+        {
+            "nombre": "sosa",
+            "puntuacion_total": 3100,
+            "nivel_maximo": 3,
+            "astros_descubiertos": [
+                "Mercurio",
+                "Marte",
+                "Luna",
+                "Saturno",
+                "Estacion",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:16:58"
+        },
+        {
+            "nombre": "asd",
+            "puntuacion_total": 1900,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Estrella",
+                "Estacion",
+                "Marte",
+                "Venus"
+            ],
+            "fecha_hora": "2026-05-24 21:22:48"
+        }
+    ],
     "top_scores": [
-        {"nombre": "GEMI", "puntos": 2500, "fecha": "2026-04-20"},
-        {"nombre": "ARC", "puntos": 1800, "fecha": "2026-04-21"},
-        {"nombre": "LUCAS 2B", "puntos": 1500, "fecha": "2026-04-22"}
+        {
+            "nombre": "sosa",
+            "puntos": 3100
+        },
+        {
+            "nombre": "Manuel",
+            "puntos": 1900
+        },
+        {
+            "nombre": "asd",
+            "puntos": 1900
+        },
+        {
+            "nombre": "Ulises",
+            "puntos": 500
+        },
+        {
+            "nombre": "ulises",
+            "puntos": 400
+        }
     ]
 }

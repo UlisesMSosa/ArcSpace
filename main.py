@@ -3,6 +3,7 @@ import json
 from sys import exit
 from random import randint
 import math
+import datetime
 
 class Camara(pygame.sprite.Sprite):
     def __init__(self, limite_ancho, limite_alto):
@@ -67,7 +68,8 @@ class Camara(pygame.sprite.Sprite):
             self.rect.y += self.velocidad
 
     def update(self):
-        self.movimiento()
+        if estado_actual not in (ESTADO_INTERMISION1, ESTADO_INTERMISION2, ESTADO_INTERMISION3, ESTADO_INTERMISION4):
+            self.movimiento()
         radio = 50
         self.image = pygame.Surface((radio * 2 + 100, radio * 2 + 80), pygame.SRCALPHA)
         color_borde = (0, 255, 0)
@@ -195,24 +197,11 @@ def dibujar_objetivo():
     pantalla.blit(texto_obj2, texto_obj2_rect)
 
 def mostrar_menu():
-    global nombre_jugador
+    global nombre_jugador, boton_puntajes_rect
     titulo = fuente_titulo.render("ArcSpace", False, (255,255,255))
     titulo_rect = titulo.get_rect(center = (ancho / 2, alto / 8))
-    scores_title = fuente_normal.render("Puntajes", False, (255,0,0))
-    scores_title_rect = scores_title.get_rect(midleft = (ancho / 1.31 , alto / 7))
-
-    ancla = (ancho / 1.38, alto / 14)
-    offset = (0, 50)
-    posicion_final = tuple(a + b for a, b in zip(ancla, offset))
-
-    for score in scores:
-        posicion_final = tuple(a + b for a, b in zip(posicion_final, offset))
-        score_surf = fuente_normal.render(f"{score["nombre"]}: {score["puntos"]}", False, (255, 0, 0))
-        score_rect = score_surf.get_rect(topleft = posicion_final)
-        pantalla.blit(score_surf, score_rect)
 
     pantalla.blit(titulo, titulo_rect)
-    pantalla.blit(scores_title, scores_title_rect)
 
     input_label = fuente_media.render("INGRESA TU NOMBRE", False, (255,255,255))
     input_label_rect = input_label.get_rect(center = (ancho / 2, alto / 2))
@@ -225,6 +214,89 @@ def mostrar_menu():
     instruccion = fuente_media.render("PRESIONE ESPACIO PARA INICIAR", False, (255,255,255))
     instruccion_rect = instruccion.get_rect(center = (ancho / 2, alto / 2 + 140))
     pantalla.blit(instruccion, instruccion_rect)
+
+    boton_base = fuente_normal.render("PUNTAJES", False, (255, 255, 255))
+    boton_base_rect = boton_base.get_rect()
+    boton_base_rect.centery = titulo_rect.centery
+    boton_base_rect.right = ancho - 20
+    mouse_pos = pygame.mouse.get_pos()
+    hover = boton_base_rect.inflate(20, 10).collidepoint(mouse_pos)
+    if hover:
+        escala = 1.1
+        boton_puntajes = pygame.transform.scale(boton_base,
+            (int(boton_base.get_width() * escala), int(boton_base.get_height() * escala)))
+        boton_puntajes_rect = boton_puntajes.get_rect(center=boton_base_rect.center)
+        padding = 12
+        bg_rect = boton_puntajes_rect.inflate(padding * 2, padding)
+    else:
+        boton_puntajes = boton_base
+        boton_puntajes_rect = boton_base_rect
+        padding = 12
+        bg_rect = boton_base_rect.inflate(padding * 2, padding)
+    pygame.draw.rect(pantalla, (100, 0, 180), bg_rect, border_radius=8)
+    pantalla.blit(boton_puntajes, boton_puntajes_rect)
+
+    if nombre_erroneo:
+        error_texto = fuente_pequena.render("YA EXISTE UN JUGADOR CON ESE NOMBRE", False, (255, 0, 0))
+        error_rect = error_texto.get_rect(center=(ancho // 2, alto - 30))
+        pantalla.blit(error_texto, error_rect)
+
+def mostrar_puntajes():
+    global boton_volver_rect, scroll_offset
+    titulo = fuente_titulo.render("PUNTAJES", False, (255, 255, 255))
+    titulo_rect = titulo.get_rect(center=(ancho // 2, 50))
+
+    boton_base = fuente_normal.render("VOLVER (M)", False, (255, 255, 255))
+    boton_base_rect = boton_base.get_rect()
+    boton_base_rect.centery = titulo_rect.centery
+    boton_base_rect.right = ancho - 20
+    mouse_pos = pygame.mouse.get_pos()
+    hover = boton_base_rect.inflate(20, 10).collidepoint(mouse_pos)
+    if hover:
+        escala = 1.1
+        boton_volver = pygame.transform.scale(boton_base,
+            (int(boton_base.get_width() * escala), int(boton_base.get_height() * escala)))
+        boton_volver_rect = boton_volver.get_rect(center=boton_base_rect.center)
+        padding = 12
+        bg_rect = boton_volver_rect.inflate(padding * 2, padding)
+    else:
+        boton_volver = boton_base
+        boton_volver_rect = boton_base_rect
+        padding = 12
+        bg_rect = boton_base_rect.inflate(padding * 2, padding)
+    pygame.draw.rect(pantalla, (100, 0, 180), bg_rect, border_radius=8)
+    pantalla.blit(boton_volver, boton_volver_rect)
+
+    pantalla.blit(titulo, titulo_rect)
+
+    y_inicio = 110
+    alto_entrada = 80
+    area_y = alto - y_inicio - 20
+    total_alto = len(jugadores_ordenados) * alto_entrada
+    max_scroll = max(0, total_alto - area_y)
+    scroll_offset = min(scroll_offset, max_scroll)
+
+    for i, (nombre, datos_jugador) in enumerate(jugadores_ordenados):
+        y = y_inicio + i * alto_entrada - scroll_offset
+        if y + alto_entrada < y_inicio or y > alto - 20:
+            continue
+
+        pts = datos_jugador["puntuacion_total"]
+        nivel_max = datos_jugador["nivel_maximo"]
+        astros = datos_jugador["astros_descubiertos"]
+        cant_astros = len(astros)
+        partidas = datos_jugador["cantidad_partidas"]
+
+        fuente_actual = fuente_normal if i < 3 else fuente_pequena
+        nombre_surf = fuente_actual.render(f"{nombre}", False, (255, 215, 0))
+        pts_surf = fuente_actual.render(f"{pts} pts", False, (255, 215, 0))
+        pantalla.blit(nombre_surf, (60, y))
+        pantalla.blit(pts_surf, (60 + nombre_surf.get_width() + 20, y))
+        info_surf = fuente_pequena.render(
+            f"Nivel max: {nivel_max}  |  Astros: {cant_astros}  |  Partidas: {partidas}",
+            False, (150, 50, 200)
+        )
+        pantalla.blit(info_surf, (60, y + (35 if i < 3 else 20)))
 
 def crear_astros():
     global nivel
@@ -627,6 +699,48 @@ def generar_posiciones_validas(cantidad, radio_seguridad, posiciones_extras=None
     # Quitamos la posición de la cámara antes de devolver la lista
     return posiciones[1:]
 
+def guardar_puntuacion():
+    global scores
+    astros_descubiertos = list(set(
+        [a["nombre"] for a in album] +
+        [a["nombre"] for a in coleccion]
+    ))
+    ahora = datetime.datetime.now()
+    fecha_hora = ahora.strftime("%Y-%m-%d %H:%M:%S")
+    punt_total = puntuacion_total_partida + puntuacion
+    try:
+        with open('data/scores.json', 'r') as f:
+            datos = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        datos = {"jugadores": {}, "partidas": [], "top_scores": []}
+    if nombre_jugador not in datos["jugadores"]:
+        datos["jugadores"][nombre_jugador] = {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 0
+        }
+    player = datos["jugadores"][nombre_jugador]
+    player["cantidad_partidas"] += 1
+    if punt_total > player["puntuacion_total"]:
+        player["puntuacion_total"] = punt_total
+        player["nivel_maximo"] = nivel
+        player["astros_descubiertos"] = astros_descubiertos
+        player["fecha_hora"] = fecha_hora
+    datos["partidas"].append({
+        "nombre": nombre_jugador,
+        "puntuacion_total": punt_total,
+        "nivel_maximo": nivel,
+        "astros_descubiertos": astros_descubiertos,
+        "fecha_hora": fecha_hora
+    })
+    sorted_players = sorted(datos["jugadores"].items(), key=lambda x: x[1]["puntuacion_total"], reverse=True)
+    datos["top_scores"] = [{"nombre": k, "puntos": v["puntuacion_total"]} for k, v in sorted_players]
+    with open('data/scores.json', 'w') as f:
+        json.dump(datos, f, indent=4)
+    scores = datos["top_scores"]
+
 pygame.init()
 ancho = 1280
 alto = 720
@@ -663,6 +777,7 @@ ESTADO_INTERMISION3 = "intermision3"
 ESTADO_INTERMISION4 = "intermision4"
 ESTADO_JUGANDO = "jugando"
 ESTADO_REPORTE = "reporte"
+ESTADO_PUNTAJES = "puntajes"
 
 # Estado inicial
 estado_actual = ESTADO_MENU
@@ -690,10 +805,13 @@ datos_teclas = [
 
 #Mostrar jugadores
 scores = []
+nombres_existentes = set()
 with open('data/scores.json', 'r') as f:
     datos = json.load(f)
     for item in datos["top_scores"]:
         scores.append(item)
+    if "jugadores" in datos:
+        nombres_existentes = {k.lower() for k in datos["jugadores"]}
 
 #Juego
 fotos = 5
@@ -703,14 +821,14 @@ camara.add(Camara(ancho, alto))
 #Astros
 assets_astros = {
     "Luna": cargar_imagen("assets/Graphics/Astros/Luna.png", (140, 140)),
-    "Venus": cargar_imagen("assets/Graphics/Astros/Venus.png", (120, 120)),
-    "Mercurio": cargar_imagen("assets/Graphics/Astros/Mercurio.png", (100, 100)),
-    "Marte": cargar_imagen("assets/Graphics/Astros/Marte.png", (90, 90)),
+    "Venus": cargar_imagen("assets/Graphics/Astros/Venus.png", (140, 140)),
+    "Mercurio": cargar_imagen("assets/Graphics/Astros/Mercurio.png", (140, 140)),
+    "Marte": cargar_imagen("assets/Graphics/Astros/Marte.png", (140, 140)),
     "Estacion": cargar_imagen("assets/Graphics/Astros/Estacion.png", (80, 80)),
-    "Jupiter": cargar_imagen("assets/Graphics/Astros/Jupiter.png", (70, 70)),
-    "Saturno": cargar_imagen("assets/Graphics/Astros/Saturno.png", (100, 60)),
-    "Urano": cargar_imagen("assets/Graphics/Astros/Urano.png", (50, 50)),
-    "Neptuno": cargar_imagen("assets/Graphics/Astros/Neptuno.png", (45, 45)),
+    "Jupiter": cargar_imagen("assets/Graphics/Astros/Jupiter.png", (140, 140)),
+    "Saturno": cargar_imagen("assets/Graphics/Astros/Saturno.png", (140, 140)),
+    "Urano": cargar_imagen("assets/Graphics/Astros/Urano.png", (140, 140)),
+    "Neptuno": cargar_imagen("assets/Graphics/Astros/Neptuno.png", (140, 140)),
     "Estrella": cargar_imagen("assets/Graphics/Astros/Estrella.png", (45, 45)),
     }
 
@@ -741,6 +859,7 @@ pagina_actual = 0
 
 #Puntuacion
 puntuacion = 0
+puntuacion_total_partida = 0
 
 #Tiempo
 ticks_inicio = pygame.time.get_ticks()
@@ -768,6 +887,13 @@ objetivo = 500
 
 ##Nombre jugador
 nombre_jugador = ""
+nombre_erroneo = False
+
+##Puntajes
+scroll_offset = 0
+jugadores_ordenados = []
+boton_puntajes_rect = pygame.Rect(0, 0, 0, 0)
+boton_volver_rect = pygame.Rect(0, 0, 0, 0)
 
 ##Flash
 flash_activo = False
@@ -779,25 +905,59 @@ pygame.display.flip()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            if nombre_jugador:
+                guardar_puntuacion()
+                nombres_existentes.add(nombre_jugador.lower())
             pygame.quit()
             exit()
         
         if estado_actual == 'menu':
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    if nombre_jugador:
+                    if nombre_jugador and nombre_jugador.lower() not in nombres_existentes:
                         tiempo_inicio_intermision1 = pygame.time.get_ticks()
                         estado_actual = ESTADO_INTERMISION1
                         astros_grupo = pygame.sprite.Group()
                         puntuacion = 0
+                        puntuacion_total_partida = 0
                         tipo_pausa = ""
                         fotos_tutorial = 5
                         crear_astros()
+                    elif nombre_jugador:
+                        nombre_erroneo = True
                 elif event.key == pygame.K_BACKSPACE:
                     nombre_jugador = nombre_jugador[:-1]
+                    nombre_erroneo = False
                 else:
                     if len(nombre_jugador) < 10:
                         nombre_jugador += event.unicode
+                        nombre_erroneo = nombre_jugador.lower() in nombres_existentes
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if boton_puntajes_rect.collidepoint(event.pos):
+                    with open('data/scores.json', 'r') as f:
+                        datos = json.load(f)
+                    jugadores_ordenados = sorted(
+                        datos["jugadores"].items(),
+                        key=lambda x: x[1]["puntuacion_total"],
+                        reverse=True
+                    )
+                    scroll_offset = 0
+                    estado_actual = ESTADO_PUNTAJES
+
+        elif estado_actual == 'puntajes':
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m or event.key == pygame.K_ESCAPE:
+                    estado_actual = ESTADO_MENU
+                elif event.key == pygame.K_UP:
+                    scroll_offset = max(0, scroll_offset - 50)
+                elif event.key == pygame.K_DOWN:
+                    scroll_offset += 50
+            if event.type == pygame.MOUSEWHEEL:
+                scroll_offset -= event.y * 40
+                scroll_offset = max(0, scroll_offset)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if boton_volver_rect.collidepoint(event.pos):
+                    estado_actual = ESTADO_MENU
         
 
         elif estado_actual == 'intermision1':
@@ -858,7 +1018,9 @@ while True:
                 fotos -= 1
                 flash_activo = True
                 flash_tiempo = pygame.time.get_ticks()
-                puntuacion += tomar_foto()
+                p = tomar_foto()
+                puntuacion += p
+                puntuacion_total_partida += p
                 if puntuacion >= objetivo:
                     tiempo_pausado = True
                     tipo_pausa = "objetivo"
@@ -942,6 +1104,7 @@ while True:
                         album.clear()
                         coleccion.clear()
                         nivel = 1
+                        puntuacion_total_partida = 0
                         for astro in astros_grupo:
                             astro.kill()
                         astros_grupo = pygame.sprite.Group()
@@ -960,10 +1123,13 @@ while True:
                             f.estado = 'girando'
                             break
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m and todas_pegadas:
+                guardar_puntuacion()
+                nombres_existentes.add(nombre_jugador.lower())
                 fotos_pegadas_permanentes.clear()
                 album.clear()
                 coleccion.clear()
                 nivel = 1
+                puntuacion_total_partida = 0
                 nombre_jugador = ""
                 fotos_reporte_instancias.clear()
                 estado_actual = ESTADO_MENU
@@ -1236,6 +1402,9 @@ while True:
 
     if estado_actual == 'reporte':
         mostrar_reporte()
-        
+
+    if estado_actual == 'puntajes':
+        mostrar_puntajes()
+
     pygame.display.update()
     clock.tick(60)
