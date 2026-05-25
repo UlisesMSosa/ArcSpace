@@ -198,7 +198,7 @@ def dibujar_objetivo():
 
 def mostrar_menu():
     global nombre_jugador, boton_puntajes_rect
-    titulo = fuente_titulo.render("ArcSpace", False, (255,255,255))
+    titulo = render_gradiente_texto(fuente_titulo_grande, "ArcSpace", (100, 0, 180), (255, 215, 0))
     titulo_rect = titulo.get_rect(center = (ancho / 2, alto / 8))
 
     pantalla.blit(titulo, titulo_rect)
@@ -277,6 +277,9 @@ def mostrar_puntajes():
     max_scroll = max(0, total_alto - area_y)
     scroll_offset = min(scroll_offset, max_scroll)
 
+    clip_rect = pygame.Rect(0, y_inicio, ancho, alto - y_inicio)
+    pantalla.set_clip(clip_rect)
+
     for i, (nombre, datos_jugador) in enumerate(jugadores_ordenados):
         y = y_inicio + i * alto_entrada - scroll_offset
         if y + alto_entrada < y_inicio or y > alto - 20:
@@ -289,22 +292,28 @@ def mostrar_puntajes():
         partidas = datos_jugador["cantidad_partidas"]
 
         fuente_actual = fuente_normal if i < 3 else fuente_pequena
-        nombre_surf_base = fuente_actual.render(f"{nombre}", False, (255, 215, 0))
-        pts_surf_base = fuente_actual.render(f"{pts} pts", False, (255, 215, 0))
-        ancho_entrada = 60 + nombre_surf_base.get_width() + 20 + pts_surf_base.get_width()
+        color_base = (255, 215, 0)
+        rank_surf_base = fuente_actual.render(f"{i + 1} - ", False, color_base)
+        nombre_surf_base = fuente_actual.render(f"{nombre}", False, color_base)
+        pts_surf_base = fuente_actual.render(f"{pts} pts", False, color_base)
+        ancho_entrada = 60 + rank_surf_base.get_width() + nombre_surf_base.get_width() + 20 + pts_surf_base.get_width()
         entry_rect = pygame.Rect(60, y, ancho_entrada, fuente_actual.get_height())
         puntajes_rects.append({"nombre": nombre, "datos": datos_jugador, "rect": entry_rect})
         mouse_pos = pygame.mouse.get_pos()
-        color_nombre = (150, 50, 200) if entry_rect.collidepoint(mouse_pos) else (255, 215, 0)
+        color_nombre = (150, 50, 200) if entry_rect.collidepoint(mouse_pos) else color_base
+        rank_surf = fuente_actual.render(f"{i + 1} - ", False, color_nombre)
         nombre_surf = fuente_actual.render(f"{nombre}", False, color_nombre)
         pts_surf = fuente_actual.render(f"{pts} pts", False, color_nombre)
-        pantalla.blit(nombre_surf, (60, y))
-        pantalla.blit(pts_surf, (60 + nombre_surf.get_width() + 20, y))
+        pantalla.blit(rank_surf, (60, y))
+        pantalla.blit(nombre_surf, (60 + rank_surf.get_width(), y))
+        pantalla.blit(pts_surf, (60 + rank_surf.get_width() + nombre_surf.get_width() + 20, y))
         info_surf = fuente_pequena.render(
             f"Nivel max: {nivel_max}  |  Astros: {cant_astros}  |  Partidas: {partidas}",
             False, (150, 50, 200)
         )
         pantalla.blit(info_surf, (60, y + (35 if i < 3 else 20)))
+
+    pantalla.set_clip(None)
 
 def mostrar_album_puntajes():
     global boton_volver_rect, pagina_actual_album
@@ -890,6 +899,7 @@ pantalla.fill((0, 0, 0))
 pygame.display.flip()
 
 fuente_titulo = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
+fuente_titulo_grande = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 110)
 fuente_normal = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
 fuente_media = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
 fuente_pequena = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 20)
@@ -898,6 +908,19 @@ texto_carga = fuente_normal.render("Cargando...", False, (255, 255, 255))
 pantalla.blit(texto_carga, (ancho // 2 - texto_carga.get_width() // 2, alto // 2 - texto_carga.get_height() // 2))
 pygame.display.flip()
 pygame.event.pump()
+
+def render_gradiente_texto(fuente, texto, color1, color2):
+    text_surf = fuente.render(texto, True, (255, 255, 255))
+    w, h = text_surf.get_size()
+    gradiente = pygame.Surface((w, h), pygame.SRCALPHA)
+    for x in range(w):
+        t = x / max(w - 1, 1)
+        r = int(color1[0] * (1 - t) + color2[0] * t)
+        g = int(color1[1] * (1 - t) + color2[1] * t)
+        b = int(color1[2] * (1 - t) + color2[2] * t)
+        pygame.draw.line(gradiente, (r, g, b), (x, 0), (x, h))
+    gradiente.blit(text_surf, (0, 0), None, pygame.BLEND_RGBA_MULT)
+    return gradiente
 
 def cargar_imagen(ruta, escala=None):
     img = pygame.image.load(ruta).convert_alpha()
