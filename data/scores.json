@@ -56,6 +56,74 @@
             ],
             "fecha_hora": "2026-05-24 21:22:48",
             "cantidad_partidas": 1
+        },
+        "fgaa\r": {
+            "puntuacion_total": 1700,
+            "nivel_maximo": 4,
+            "astros_descubiertos": [
+                "Estrella",
+                "Luna",
+                "Venus",
+                "Saturno",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-05-24 21:30:16",
+            "cantidad_partidas": 1
+        },
+        "tqwtr": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "asadsa": {
+            "puntuacion_total": 4000,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estacion",
+                "Venus",
+                "Mercurio",
+                "Saturno",
+                "Luna",
+                "Jupiter",
+                "Marte",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:33:55",
+            "cantidad_partidas": 1
+        },
+        "yhe": {
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:35:04",
+            "cantidad_partidas": 1
+        },
+        "as": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "asdaas": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "sadada": {
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:49:43",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -122,9 +190,81 @@
                 "Venus"
             ],
             "fecha_hora": "2026-05-24 21:22:48"
+        },
+        {
+            "nombre": "fgaa\r",
+            "puntuacion_total": 1700,
+            "nivel_maximo": 4,
+            "astros_descubiertos": [
+                "Estrella",
+                "Luna",
+                "Venus",
+                "Saturno",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-05-24 21:30:16"
+        },
+        {
+            "nombre": "tqwtr",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-05-24 21:30:57"
+        },
+        {
+            "nombre": "asadsa",
+            "puntuacion_total": 4000,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estacion",
+                "Venus",
+                "Mercurio",
+                "Saturno",
+                "Luna",
+                "Jupiter",
+                "Marte",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:33:55"
+        },
+        {
+            "nombre": "yhe",
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:35:04"
+        },
+        {
+            "nombre": "as",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-05-24 21:42:20"
+        },
+        {
+            "nombre": "asdaas",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-05-24 21:44:23"
+        },
+        {
+            "nombre": "sadada",
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-24 21:49:43"
         }
     ],
     "top_scores": [
+        {
+            "nombre": "asadsa",
+            "puntos": 4000
+        },
         {
             "nombre": "sosa",
             "puntos": 3100
@@ -138,12 +278,36 @@
             "puntos": 1900
         },
         {
+            "nombre": "fgaa\r",
+            "puntos": 1700
+        },
+        {
             "nombre": "Ulises",
             "puntos": 500
         },
         {
             "nombre": "ulises",
             "puntos": 400
+        },
+        {
+            "nombre": "yhe",
+            "puntos": 200
+        },
+        {
+            "nombre": "sadada",
+            "puntos": 200
+        },
+        {
+            "nombre": "tqwtr",
+            "puntos": 0
+        },
+        {
+            "nombre": "as",
+            "puntos": 0
+        },
+        {
+            "nombre": "asdaas",
+            "puntos": 0
         }
     ]
 }

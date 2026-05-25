@@ -68,7 +68,7 @@ class Camara(pygame.sprite.Sprite):
             self.rect.y += self.velocidad
 
     def update(self):
-        if estado_actual not in (ESTADO_INTERMISION1, ESTADO_INTERMISION2, ESTADO_INTERMISION3, ESTADO_INTERMISION4):
+        if estado_actual not in (ESTADO_INTERMISION1, ESTADO_INTERMISION2, ESTADO_INTERMISION3, ESTADO_INTERMISION4, ESTADO_INTERMISION_MEJORA):
             self.movimiento()
         radio = 50
         self.image = pygame.Surface((radio * 2 + 100, radio * 2 + 80), pygame.SRCALPHA)
@@ -242,7 +242,8 @@ def mostrar_menu():
         pantalla.blit(error_texto, error_rect)
 
 def mostrar_puntajes():
-    global boton_volver_rect, scroll_offset
+    global boton_volver_rect, scroll_offset, puntajes_rects
+    puntajes_rects = []
     titulo = fuente_titulo.render("PUNTAJES", False, (255, 255, 255))
     titulo_rect = titulo.get_rect(center=(ancho // 2, 50))
 
@@ -288,8 +289,15 @@ def mostrar_puntajes():
         partidas = datos_jugador["cantidad_partidas"]
 
         fuente_actual = fuente_normal if i < 3 else fuente_pequena
-        nombre_surf = fuente_actual.render(f"{nombre}", False, (255, 215, 0))
-        pts_surf = fuente_actual.render(f"{pts} pts", False, (255, 215, 0))
+        nombre_surf_base = fuente_actual.render(f"{nombre}", False, (255, 215, 0))
+        pts_surf_base = fuente_actual.render(f"{pts} pts", False, (255, 215, 0))
+        ancho_entrada = 60 + nombre_surf_base.get_width() + 20 + pts_surf_base.get_width()
+        entry_rect = pygame.Rect(60, y, ancho_entrada, fuente_actual.get_height())
+        puntajes_rects.append({"nombre": nombre, "datos": datos_jugador, "rect": entry_rect})
+        mouse_pos = pygame.mouse.get_pos()
+        color_nombre = (150, 50, 200) if entry_rect.collidepoint(mouse_pos) else (255, 215, 0)
+        nombre_surf = fuente_actual.render(f"{nombre}", False, color_nombre)
+        pts_surf = fuente_actual.render(f"{pts} pts", False, color_nombre)
         pantalla.blit(nombre_surf, (60, y))
         pantalla.blit(pts_surf, (60 + nombre_surf.get_width() + 20, y))
         info_surf = fuente_pequena.render(
@@ -297,6 +305,127 @@ def mostrar_puntajes():
             False, (150, 50, 200)
         )
         pantalla.blit(info_surf, (60, y + (35 if i < 3 else 20)))
+
+def mostrar_album_puntajes():
+    global boton_volver_rect, pagina_actual_album
+    titulo = fuente_titulo.render(f"Album de {album_puntajes_clave}", False, (255, 215, 0))
+    titulo_rect = titulo.get_rect(center=(ancho // 2, 110))
+
+    boton_base = fuente_normal.render("VOLVER (M)", False, (255, 255, 255))
+    boton_base_rect = boton_base.get_rect()
+    boton_base_rect.top = 20
+    boton_base_rect.right = ancho - 20
+    mouse_pos = pygame.mouse.get_pos()
+    hover = boton_base_rect.inflate(20, 10).collidepoint(mouse_pos)
+    if hover:
+        escala = 1.1
+        boton_volver = pygame.transform.scale(boton_base,
+            (int(boton_base.get_width() * escala), int(boton_base.get_height() * escala)))
+        boton_volver_rect = boton_volver.get_rect(center=boton_base_rect.center)
+        padding = 12
+        bg_rect = boton_volver_rect.inflate(padding * 2, padding)
+    else:
+        boton_volver = boton_base
+        boton_volver_rect = boton_base_rect
+        padding = 12
+        bg_rect = boton_base_rect.inflate(padding * 2, padding)
+    pygame.draw.rect(pantalla, (100, 0, 180), bg_rect, border_radius=8)
+    pantalla.blit(boton_volver, boton_volver_rect)
+    pantalla.blit(titulo, titulo_rect)
+
+    rec_w, rec_h = 130, 130
+    gap = 30
+    group_w = 2 * rec_w + gap
+    group_h = 2 * rec_h + gap
+    sep = 150
+    total_w = 2 * group_w + sep
+    start_x = (ancho - total_w) // 2
+    start_y = 275
+
+    page0_slots = []
+    for i in range(8):
+        group = i // 4
+        idx = i % 4
+        r = idx // 2
+        c = idx % 2
+        rx = start_x + group * (group_w + sep) + c * (rec_w + gap)
+        ry = start_y + r * (rec_h + gap)
+        page0_slots.append(pygame.Rect(rx, ry, rec_w, rec_h))
+
+    astros_sin_pos = [a for a in astros if "posicion" not in a]
+    posiciones_pagina = {0: page0_slots}
+    if astros_sin_pos:
+        extra_pages = (len(astros_sin_pos) - 1) // 8 + 1
+        for p in range(1, extra_pages + 1):
+            posiciones_pagina[p] = [pygame.Rect(r.x, r.y, r.w, r.h) for r in page0_slots]
+
+    if pagina_actual_album >= len(posiciones_pagina):
+        pagina_actual_album = 0
+
+    total_paginas_album = len(posiciones_pagina)
+    img_uibook_rect = img_uibook.get_rect(center=(ancho // 2, 420))
+    pantalla.blit(img_uibook, img_uibook_rect)
+
+    for i, rect in enumerate(posiciones_pagina[pagina_actual_album]):
+        dibujar_rect_punteado(pantalla, (0, 0, 0), (rect.x, rect.y, rec_w, rec_h), 8)
+        num_surf = fuente_normal.render(str(i + pagina_actual_album * 8 + 1), False, (180, 180, 180))
+        num_rect = num_surf.get_rect(center=rect.center)
+        pantalla.blit(num_surf, num_rect)
+
+    for f in fotos_album_puntajes:
+        if f.estado == 'pegada' and f.pagina == pagina_actual_album:
+            pantalla.blit(f.image, f.rect)
+
+    for f in fotos_album_puntajes:
+        if f.estado == 'girando':
+            pantalla.blit(f.image, f.rect)
+
+    for f in fotos_album_puntajes:
+        if f.estado == 'revelada':
+            pantalla.blit(f.image, f.rect)
+            nombre_surf = fuente_normal.render(f.clave.upper(), False, (255, 255, 255))
+            ancho_max = 260
+            palabras = f.texto_astro.split()
+            lineas = []
+            linea_actual = ""
+            for p in palabras:
+                prueba = linea_actual + (" " if linea_actual else "") + p
+                if fuente_pequena.size(prueba)[0] <= ancho_max:
+                    linea_actual = prueba
+                else:
+                    if linea_actual:
+                        lineas.append(linea_actual)
+                    linea_actual = p
+            if linea_actual:
+                lineas.append(linea_actual)
+            textos_surf = [fuente_pequena.render(l, False, (153, 81, 184)) for l in lineas]
+            panel_w = max(nombre_surf.get_width(), ancho_max) + 20
+            panel_h = nombre_surf.get_height() + len(textos_surf) * fuente_pequena.get_height() + 20
+            margen = 10
+            lado_derecho = f.rect.right + margen + panel_w < ancho - margen
+            if lado_derecho:
+                panel_x = f.rect.right + margen
+            else:
+                panel_x = f.rect.left - margen - panel_w
+            panel_y = max(margen, min(f.rect.centery - panel_h // 2, alto - margen - panel_h))
+            pygame.draw.rect(pantalla, (0, 0, 0), (panel_x, panel_y, panel_w, panel_h), border_radius=6)
+            pantalla.blit(nombre_surf, (panel_x + 10, panel_y + 6))
+            y_offset = panel_y + 10 + nombre_surf.get_height()
+            for s in textos_surf:
+                pantalla.blit(s, (panel_x + 10, y_offset))
+                y_offset += fuente_pequena.get_height()
+            if f.hover:
+                pygame.draw.rect(pantalla, (192, 192, 192), f.rect, 3, border_radius=2)
+
+    tam_flecha = 50
+    margen_book = 12
+    flecha_izq_img = pygame.transform.scale(img_left, (tam_flecha, tam_flecha))
+    flecha_der_img = pygame.transform.scale(img_right, (tam_flecha, tam_flecha))
+    libro_bottom = 670
+    if pagina_actual_album > 0:
+        pantalla.blit(flecha_izq_img, (ancho // 2 - 415 + margen_book + 30, libro_bottom - margen_book - tam_flecha - 40))
+    if pagina_actual_album < total_paginas_album - 1:
+        pantalla.blit(flecha_der_img, (ancho // 2 + 415 - margen_book - tam_flecha - 30, libro_bottom - margen_book - tam_flecha - 40))
 
 def crear_astros():
     global nivel
@@ -442,8 +571,8 @@ def mostrar_reporte():
     rect_alto = 110
     x = (ancho - rect_ancho) // 2
     y = 0
-    pygame.draw.rect(pantalla, (48, 39, 38), (x, y, rect_ancho, rect_alto), border_radius=20)
-    texto_fotos_nuevas = fuente_media.render("fotos nuevas:", False, (180, 180, 180))
+    pygame.draw.rect(pantalla, (100, 0, 180), (x, y, rect_ancho, rect_alto), border_radius=20)
+    texto_fotos_nuevas = fuente_media.render("fotos nuevas:", False, (255, 255, 255))
     pantalla.blit(texto_fotos_nuevas, (x + 10, y + (rect_alto - texto_fotos_nuevas.get_height()) // 2))
 
     tamano_foto = 80
@@ -525,24 +654,32 @@ def mostrar_reporte():
     for f in fotos_reporte_instancias:
         f.update()
 
-    if album:
-        claves_pegadas = {f.clave for f in fotos_reporte_instancias if f.estado == 'pegada'}
-        claves_pegadas |= {c for c, _, _ in fotos_pegadas_permanentes}
-        total_fotos = len(album)
-        ancho_total = total_fotos * tamano_foto + (total_fotos - 1) * espacio
-        min_inicio_x = x + 10 + texto_fotos_nuevas.get_width() + 20
-        inicio_x = max(min_inicio_x, x + (rect_ancho - ancho_total) // 2)
-        y_foto = y + (rect_alto - tamano_foto) // 2
-        for idx_album, item in enumerate(album):
-            clave = item["nombre"]
-            if clave in claves_pegadas:
-                continue
+        if album:
+            claves_pegadas = {f.clave for f in fotos_reporte_instancias if f.estado == 'pegada'}
+            claves_pegadas |= {c for c, _, _ in fotos_pegadas_permanentes}
+            claves_vistas = set()
+            total_fotos = len(album)
+            ancho_total = total_fotos * tamano_foto + (total_fotos - 1) * espacio
+            min_inicio_x = x + 10 + texto_fotos_nuevas.get_width() + 20
+            inicio_x = max(min_inicio_x, x + (rect_ancho - ancho_total) // 2)
+            y_foto = y + (rect_alto - tamano_foto) // 2
+            for idx_album, item in enumerate(album):
+                clave = item["nombre"]
+                if clave in claves_pegadas or clave in claves_vistas:
+                    continue
+                claves_vistas.add(clave)
             pos_x = inicio_x + idx_album * (tamano_foto + espacio)
             pygame.draw.rect(pantalla, (212, 193, 190), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), border_radius=2)
             pygame.draw.rect(pantalla, (0, 0, 0), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), 3, border_radius=2)
             img = assets_astros.get(clave)
             if img:
-                pantalla.blit(pygame.transform.scale(img, (tamano_foto, tamano_foto)), (pos_x, y_foto))
+                iw, ih = img.get_size()
+                escala = min(tamano_foto / iw, tamano_foto / ih)
+                nuevo_w, nuevo_h = int(iw * escala), int(ih * escala)
+                img_escalada = pygame.transform.smoothscale(img, (nuevo_w, nuevo_h))
+                offset_x = pos_x + (tamano_foto - nuevo_w) // 2
+                offset_y = y_foto + (tamano_foto - nuevo_h) // 2
+                pantalla.blit(img_escalada, (offset_x, offset_y))
 
     img_uibook_rect = img_uibook.get_rect(center=(ancho // 2, 420))
     pantalla.blit(img_uibook, img_uibook_rect)
@@ -640,7 +777,7 @@ def mostrar_reporte():
                     linea_actual = p
             if linea_actual:
                 lineas.append(linea_actual)
-            textos_surf = [fuente_pequena.render(l, False, (200, 200, 200)) for l in lineas]
+            textos_surf = [fuente_pequena.render(l, False, (153, 81, 184)) for l in lineas]
             panel_w = max(nombre_surf.get_width(), ancho_max) + 20
             panel_h = nombre_surf.get_height() + len(textos_surf) * fuente_pequena.get_height() + 20
             margen = 10
@@ -650,7 +787,7 @@ def mostrar_reporte():
             else:
                 panel_x = f.rect.left - margen - panel_w
             panel_y = max(margen, min(f.rect.centery - panel_h // 2, alto - margen - panel_h))
-            pygame.draw.rect(pantalla, (20, 20, 20), (panel_x, panel_y, panel_w, panel_h), border_radius=6)
+            pygame.draw.rect(pantalla, (0, 0, 0), (panel_x, panel_y, panel_w, panel_h), border_radius=6)
             pantalla.blit(nombre_surf, (panel_x + 10, panel_y + 6))
             y_offset = panel_y + 10 + nombre_surf.get_height()
             for s in textos_surf:
@@ -775,9 +912,11 @@ ESTADO_INTERMISION1 = "intermision1"
 ESTADO_INTERMISION2 = "intermision2"
 ESTADO_INTERMISION3 = "intermision3"
 ESTADO_INTERMISION4 = "intermision4"
+ESTADO_INTERMISION_MEJORA = "intermision_mejora"
 ESTADO_JUGANDO = "jugando"
 ESTADO_REPORTE = "reporte"
 ESTADO_PUNTAJES = "puntajes"
+ESTADO_ALBUM_PUNTAJES = "album_puntajes"
 
 # Estado inicial
 estado_actual = ESTADO_MENU
@@ -826,7 +965,7 @@ assets_astros = {
     "Marte": cargar_imagen("assets/Graphics/Astros/Marte.png", (140, 140)),
     "Estacion": cargar_imagen("assets/Graphics/Astros/Estacion.png", (80, 80)),
     "Jupiter": cargar_imagen("assets/Graphics/Astros/Jupiter.png", (140, 140)),
-    "Saturno": cargar_imagen("assets/Graphics/Astros/Saturno.png", (140, 140)),
+    "Saturno": cargar_imagen("assets/Graphics/Astros/Saturno.png", (140, 84)),
     "Urano": cargar_imagen("assets/Graphics/Astros/Urano.png", (140, 140)),
     "Neptuno": cargar_imagen("assets/Graphics/Astros/Neptuno.png", (140, 140)),
     "Estrella": cargar_imagen("assets/Graphics/Astros/Estrella.png", (45, 45)),
@@ -872,6 +1011,7 @@ tipo_pausa = ""
 tiempo_inicio_intermision2 = 0
 tiempo_inicio_intermision3 = 0
 tiempo_inicio_intermision4 = 0
+tiempo_inicio_intermision_mejora = 0
 fotos_tutorial = 5
 #Fotos tomadas
 album = []
@@ -894,6 +1034,13 @@ scroll_offset = 0
 jugadores_ordenados = []
 boton_puntajes_rect = pygame.Rect(0, 0, 0, 0)
 boton_volver_rect = pygame.Rect(0, 0, 0, 0)
+puntajes_rects = []
+
+##Album puntajes
+pagina_actual_album = 0
+album_puntajes_astros = []
+album_puntajes_clave = ""
+fotos_album_puntajes = []
 
 ##Flash
 flash_activo = False
@@ -958,6 +1105,112 @@ while True:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if boton_volver_rect.collidepoint(event.pos):
                     estado_actual = ESTADO_MENU
+                else:
+                    for entry in puntajes_rects:
+                        if entry["rect"].collidepoint(event.pos):
+                            cargar_assets_reales()
+                            album_puntajes_clave = entry["nombre"]
+                            album_puntajes_astros = entry["datos"]["astros_descubiertos"]
+                            pagina_actual_album = 0
+                            fotos_album_puntajes.clear()
+                            rec_w, rec_h = 130, 130
+                            gap = 30
+                            group_w = 2 * rec_w + gap
+                            group_h = 2 * rec_h + gap
+                            sep = 150
+                            total_w = 2 * group_w + sep
+                            start_x = (ancho - total_w) // 2
+                            start_y = 275
+                            page0_slots = []
+                            for i in range(8):
+                                group = i // 4
+                                idx = i % 4
+                                r = idx // 2
+                                c = idx % 2
+                                rx = start_x + group * (group_w + sep) + c * (rec_w + gap)
+                                ry = start_y + r * (rec_h + gap)
+                                page0_slots.append(pygame.Rect(rx, ry, rec_w, rec_h))
+                            astros_sin_pos = [a for a in astros if "posicion" not in a]
+                            for clave_astro in album_puntajes_astros:
+                                astro_data = next((a for a in astros if a["nombre"] == clave_astro), None)
+                                if astro_data is None:
+                                    continue
+                                pos = astro_data.get("posicion")
+                                pixel_img = assets_astros.get(clave_astro)
+                                real_img = assets_reales.get(clave_astro)
+                                if not (pixel_img and real_img):
+                                    continue
+                                if pos is not None and 0 <= pos < len(page0_slots):
+                                    rect_dest = page0_slots[pos]
+                                    pagina = 0
+                                else:
+                                    try:
+                                        idx_sin = next(i for i, a in enumerate(astros_sin_pos) if a["nombre"] == clave_astro)
+                                        target_page = 1 + idx_sin // 8
+                                        target_slot = idx_sin % 8
+                                        rect_dest = page0_slots[target_slot]
+                                        pagina = target_page
+                                    except StopIteration:
+                                        continue
+                                foto = FotoReporte(clave_astro, astro_data.get("texto", ""), pygame.Rect(0, 0, 1, 1), rect_dest, pixel_img, real_img)
+                                foto.pagina = pagina
+                                foto.pegar()
+                                fotos_album_puntajes.append(foto)
+                            estado_actual = ESTADO_ALBUM_PUNTAJES
+                            break
+
+        elif estado_actual == 'album_puntajes':
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m or event.key == pygame.K_ESCAPE:
+                    estado_actual = ESTADO_PUNTAJES
+                elif event.key == pygame.K_LEFT:
+                    pagina_actual_album = max(0, pagina_actual_album - 1)
+                elif event.key == pygame.K_RIGHT:
+                    pagina_actual_album += 1
+            if event.type == pygame.MOUSEWHEEL:
+                if event.y > 0:
+                    pagina_actual_album = max(0, pagina_actual_album - 1)
+                else:
+                    pagina_actual_album += 1
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if boton_volver_rect.collidepoint(event.pos):
+                    estado_actual = ESTADO_PUNTAJES
+                else:
+                    pegando = False
+                    for f in fotos_album_puntajes:
+                        if f.estado == 'revelada' and f.rect.collidepoint(event.pos):
+                            f.pegar()
+                            pegando = True
+                            break
+                    if not pegando:
+                        libro_bottom = 670
+                        margen_book = 12
+                        tam_flecha = 50
+                        clicked_arrow = False
+                        if pagina_actual_album > 0:
+                            izq_rect = pygame.Rect(ancho // 2 - 415 + margen_book + 30, libro_bottom - margen_book - tam_flecha - 40, tam_flecha, tam_flecha)
+                            if izq_rect.collidepoint(event.pos):
+                                pagina_actual_album -= 1
+                                clicked_arrow = True
+                        if not clicked_arrow:
+                            der_rect = pygame.Rect(ancho // 2 + 415 - margen_book - tam_flecha - 30, libro_bottom - margen_book - tam_flecha - 40, tam_flecha, tam_flecha)
+                            if der_rect.collidepoint(event.pos):
+                                pagina_actual_album += 1
+                                clicked_arrow = True
+                        if not clicked_arrow:
+                            for f in fotos_album_puntajes:
+                                if f.estado == 'pegada' and f.rect.collidepoint(event.pos) and f.pagina == pagina_actual_album:
+                                    f.image = pygame.transform.scale(f.superficie_real, f.tamanio_anim)
+                                    f.rect = f.image.get_rect(center=(ancho // 2, alto // 2))
+                                    f.estado = 'revelada'
+                                    break
+            if event.type == pygame.MOUSEMOTION:
+                mouse_pos = event.pos
+                for f in fotos_album_puntajes:
+                    if f.estado == 'revelada':
+                        f.hover = f.rect.collidepoint(mouse_pos)
+                    else:
+                        f.hover = False
         
 
         elif estado_actual == 'intermision1':
@@ -1012,6 +1265,11 @@ while True:
                 estado_actual = ESTADO_JUGANDO
                 ticks_inicio_juego = pygame.time.get_ticks()
                 crear_astros()
+
+        elif estado_actual == 'intermision_mejora':
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                tiempo_inicio_intermision4 = pygame.time.get_ticks()
+                estado_actual = ESTADO_INTERMISION4
 
         elif estado_actual == 'jugando':
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not tiempo_pausado:
@@ -1069,9 +1327,16 @@ while True:
                             clicked_arrow = True
                     if not clicked_arrow:
                         for f in fotos_reporte_instancias:
-                            if f.estado == 'oculta_en_libro' and f.rect_miniatura.collidepoint(event.pos):
-                                f.estado = 'girando'
+                            if f.estado == 'pegada' and f.rect.collidepoint(event.pos):
+                                f.image = pygame.transform.scale(f.superficie_real, f.tamanio_anim)
+                                f.rect = f.image.get_rect(center=(ancho // 2, alto // 2))
+                                f.estado = 'revelada'
                                 break
+                        else:
+                            for f in fotos_reporte_instancias:
+                                if f.estado == 'oculta_en_libro' and f.rect_miniatura.collidepoint(event.pos):
+                                    f.estado = 'girando'
+                                    break
             if event.type == pygame.MOUSEMOTION:
                 mouse_pos = event.pos
                 for f in fotos_reporte_instancias:
@@ -1085,38 +1350,20 @@ while True:
                         nivel += 1
                         coleccion.extend(album)
                         album.clear()
-                        astros_nivel_nuevo = [a for a in astros if a.get("nivel") == nivel]
-                        total_cantidad = sum(a.get("cantidad", 1) for a in astros_nivel_nuevo)
-                        posiciones_astros_existentes = [astro.rect.center for astro in astros_grupo]
-                        posiciones_listas = generar_posiciones_validas(total_cantidad, 200, posiciones_astros_existentes)
-                        for i, dato_astro in enumerate(astros_nivel_nuevo):
-                            cantidad = dato_astro.get("cantidad", 1)
-                            for j in range(cantidad):
-                                idx = len(posiciones_listas) - total_cantidad + i + j
-                                if 0 <= idx < len(posiciones_listas):
-                                    pos = posiciones_listas[idx]
-                                else:
-                                    pos = (ancho // 2, alto // 2)
-                                nuevo_astro = Astro(dato_astro, pos)
-                                astros_grupo.add(nuevo_astro)
                     else:
                         fotos_pegadas_permanentes.clear()
                         album.clear()
                         coleccion.clear()
                         nivel = 1
                         puntuacion_total_partida = 0
-                        for astro in astros_grupo:
-                            astro.kill()
-                        astros_grupo = pygame.sprite.Group()
-                        crear_astros()
                     puntuacion = 0
                     tipo_pausa = ""
                     fotos_tutorial = 5
                     fotos = 5
                     camara.sprite.rect.center = (ancho // 2, alto // 2)
-                    ticks_inicio_juego = pygame.time.get_ticks()
                     fotos_reporte_instancias.clear()
-                    estado_actual = ESTADO_JUGANDO
+                    tiempo_inicio_intermision_mejora = pygame.time.get_ticks()
+                    estado_actual = ESTADO_INTERMISION_MEJORA
                 else:
                     for f in fotos_reporte_instancias:
                         if f.estado == 'oculta_en_libro':
@@ -1356,6 +1603,19 @@ while True:
             texto_rect = texto.get_rect(center=(ancho // 2, alto // 2))
             pantalla.blit(texto, texto_rect)
 
+    if estado_actual == "intermision_mejora":
+        tiempo_transcurrido = (pygame.time.get_ticks() - tiempo_inicio_intermision_mejora) / 1000
+        if tiempo_transcurrido < 3:
+            texto_mejora = fuente_media.render("Camara mejorada", False, (255, 215, 0))
+            texto_mejora2 = fuente_normal.render("Ahora puedes ver mas lejos", False, (255, 255, 255))
+            texto_rect = texto_mejora.get_rect(center=(ancho // 2, alto // 2 - 20))
+            texto_rect2 = texto_mejora2.get_rect(center=(ancho // 2, alto // 2 + 30))
+            pantalla.blit(texto_mejora, texto_rect)
+            pantalla.blit(texto_mejora2, texto_rect2)
+        else:
+            tiempo_inicio_intermision4 = pygame.time.get_ticks()
+            estado_actual = ESTADO_INTERMISION4
+
     if estado_actual == 'jugando':
         mostrar_puntos_partida()
         
@@ -1405,6 +1665,9 @@ while True:
 
     if estado_actual == 'puntajes':
         mostrar_puntajes()
+
+    if estado_actual == 'album_puntajes':
+        mostrar_album_puntajes()
 
     pygame.display.update()
     clock.tick(60)
