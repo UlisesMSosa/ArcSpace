@@ -677,18 +677,18 @@ def mostrar_reporte():
                 if clave in claves_pegadas or clave in claves_vistas:
                     continue
                 claves_vistas.add(clave)
-            pos_x = inicio_x + idx_album * (tamano_foto + espacio)
-            pygame.draw.rect(pantalla, (212, 193, 190), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), border_radius=2)
-            pygame.draw.rect(pantalla, (0, 0, 0), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), 3, border_radius=2)
-            img = assets_astros.get(clave)
-            if img:
-                iw, ih = img.get_size()
-                escala = min(tamano_foto / iw, tamano_foto / ih)
-                nuevo_w, nuevo_h = int(iw * escala), int(ih * escala)
-                img_escalada = pygame.transform.smoothscale(img, (nuevo_w, nuevo_h))
-                offset_x = pos_x + (tamano_foto - nuevo_w) // 2
-                offset_y = y_foto + (tamano_foto - nuevo_h) // 2
-                pantalla.blit(img_escalada, (offset_x, offset_y))
+                pos_x = inicio_x + idx_album * (tamano_foto + espacio)
+                pygame.draw.rect(pantalla, (212, 193, 190), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), border_radius=2)
+                pygame.draw.rect(pantalla, (0, 0, 0), (pos_x - 6, y_foto - 6, tamano_foto + 12, tamano_foto + 12), 3, border_radius=2)
+                img = assets_astros.get(clave)
+                if img:
+                    iw, ih = img.get_size()
+                    escala = min(tamano_foto / iw, tamano_foto / ih)
+                    nuevo_w, nuevo_h = int(iw * escala), int(ih * escala)
+                    img_escalada = pygame.transform.smoothscale(img, (nuevo_w, nuevo_h))
+                    offset_x = pos_x + (tamano_foto - nuevo_w) // 2
+                    offset_y = y_foto + (tamano_foto - nuevo_h) // 2
+                    pantalla.blit(img_escalada, (offset_x, offset_y))
 
     img_uibook_rect = img_uibook.get_rect(center=(ancho // 2, 420))
     pantalla.blit(img_uibook, img_uibook_rect)
