@@ -1,13 +1,20 @@
 {
     "astros": [
-        {"nombre": "Luna", "puntos": 200, "texto": "El unico satelite natural de la Tierra", "cantidad": 1, "nivel": 1, "real": "Luna-Real", "posicion": 0},
+        {"nombre": "Luna", "puntos": 100, "texto": "El unico satelite natural de la Tierra", "cantidad": 1, "nivel": 1, "real": "Luna-Real", "posicion": 0},
         {"nombre": "Estrella", "puntos": 100, "texto": "Bolas de gas que brillan en el cielo", "cantidad": 5, "nivel": 1, "real": "Estrella-Real", "posicion": 1},
-        {"nombre": "Estacion", "puntos": 200, "texto": "Hogar de astronautas en el espacio", "cantidad": 1, "nivel": 1, "real": "Estacion-Real", "posicion": 2},
-        {"nombre": "Marte", "puntos": 300, "texto": "El planeta rojo, vecino de la Tierra", "cantidad": 1, "nivel": 2, "real": "Marte-Real", "posicion": 3},
-        {"nombre": "Venus", "puntos": 400, "texto": "El planeta mas caliente del sistema solar", "cantidad": 1, "nivel": 2, "real": "Venus-Real", "posicion": 4},
-        {"nombre": "Mercurio", "puntos": 500, "texto": "El planeta mas pequeno y cercano al Sol", "cantidad": 1, "nivel": 2, "real": "Mercurio-Real", "posicion": 5},
-        {"nombre": "Jupiter", "puntos": 600, "texto": "El planeta mas grande de todos", "cantidad": 1, "nivel": 3, "real": "Jupiter-Real", "posicion": 6},
-        {"nombre": "Saturno", "puntos": 700, "texto": "Famoso por sus hermosos anillos", "cantidad": 1, "nivel": 3, "real": "Saturno-Real", "posicion": 7},
-        {"nombre": "Neptuno", "puntos": 900, "texto": "El planeta mas lejano y ventoso", "cantidad": 1, "nivel": 4, "real": "Neptuno-Real"}
+        {"nombre": "Estacion", "puntos": 150, "texto": "Hogar de astronautas en el espacio", "cantidad": 1, "nivel": 1, "real": "Estacion-Real", "posicion": 2},
+        {"nombre": "Marte", "puntos": 200, "texto": "El planeta rojo, vecino de la Tierra", "cantidad": 1, "nivel": 1, "real": "Marte-Real", "posicion": 3},
+        {"nombre": "Venus", "puntos": 250, "texto": "El planeta mas caliente del sistema solar", "cantidad": 1, "nivel": 2, "real": "Venus-Real", "posicion": 4},
+        {"nombre": "Mercurio", "puntos": 300, "texto": "El planeta mas pequeno y cercano al Sol", "cantidad": 1, "nivel": 2, "real": "Mercurio-Real", "posicion": 5},
+        {"nombre": "Jupiter", "puntos": 400, "texto": "El planeta mas grande de todos", "cantidad": 1, "nivel": 2, "real": "Jupiter-Real", "posicion": 6},
+        {"nombre": "Saturno", "puntos": 500, "texto": "Famoso por sus hermosos anillos", "cantidad": 1, "nivel": 2, "real": "Saturno-Real", "posicion": 7},
+        {"nombre": "Urano", "puntos": 600, "texto": "Un gigante de hielo que rota completamente de lado", "cantidad": 1, "nivel": 3, "real": "Urano-Real", "posicion": 8},
+        {"nombre": "Neptuno", "puntos": 700, "texto": "El planeta mas lejano y ventoso", "cantidad": 1, "nivel": 3, "real": "Neptuno-Real", "posicion": 9},
+        {"nombre": "CometaHalley", "puntos": 800, "texto": "El cometa más famoso que visita la Tierra cada 75 anos", "cantidad": 1, "nivel": 3, "real": "Cometa-Real", "posicion": 10},
+        {"nombre": "AgujeroNegro", "puntos": 900, "texto": "Un lugar con tanta gravedad que ni la luz puede escapar", "cantidad": 1, "nivel": 3, "real": "Agujero-Real", "posicion": 11},
+        {"nombre": "Nebulosa", "puntos": 1000, "texto": "Cunas estelares hechas de inmensas nubes de gas", "cantidad": 1, "nivel": 4, "real": "Nebulosa-Real", "posicion": 12},
+        {"nombre": "Galaxia", "puntos": 1200, "texto": "Una enorme familia de miles de millones de estrellas", "cantidad": 1, "nivel": 4, "real": "Galaxia-Real", "posicion": 13},
+        {"nombre": "Agujero De Gusano", "puntos": 1400, "texto": "Un tunel en el espacio-tiempo que conecta lugares lejanos", "cantidad": 1, "nivel": 4, "real": "Gusano-Real", "posicion": 14},
+        {"nombre": "Ovni", "puntos": 3000, "texto": "Un misterioso objeto de origen desconocido", "cantidad": 1, "nivel": 5, "real": "Ovni-Real", "posicion": 15}
     ]
 }

@@ -154,12 +154,12 @@ class FotoReporte(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(center=(ancho // 2, alto // 2))
 
             if self.angulo >= 10 * math.pi and abs(seno) > 0.95:
-                self.image = pygame.transform.scale(self.superficie_real, self.tamanio_anim)
+                self.image = escalar_rellenar(self.superficie_real, self.tamanio_anim[0], self.tamanio_anim[1])
                 self.rect = self.image.get_rect(center=(ancho // 2, alto // 2))
                 self.estado = 'revelada'
 
     def pegar(self):
-        self.image = pygame.transform.scale(self.superficie_real, self.tamanio_relleno)
+        self.image = escalar_rellenar(self.superficie_real, self.tamanio_relleno[0], self.tamanio_relleno[1])
         self.rect = self.image.get_rect(center=self.rect_destino.center)
         self.estado = 'pegada'
 
@@ -361,12 +361,11 @@ def mostrar_album_puntajes():
         ry = start_y + r * (rec_h + gap)
         page0_slots.append(pygame.Rect(rx, ry, rec_w, rec_h))
 
-    astros_sin_pos = [a for a in astros if "posicion" not in a]
     posiciones_pagina = {0: page0_slots}
-    if astros_sin_pos:
-        extra_pages = (len(astros_sin_pos) - 1) // 8 + 1
-        for p in range(1, extra_pages + 1):
-            posiciones_pagina[p] = [pygame.Rect(r.x, r.y, r.w, r.h) for r in page0_slots]
+    max_pos = max((a.get("posicion", 0) for a in astros), default=0)
+    total_pags = (max_pos // 8) + 1
+    for p in range(1, total_pags):
+        posiciones_pagina[p] = [pygame.Rect(r.x, r.y, r.w, r.h) for r in page0_slots]
 
     if pagina_actual_album >= len(posiciones_pagina):
         pagina_actual_album = 0
@@ -545,8 +544,8 @@ def mostrar_puntos_partida(puntuacion_mostrar=None):
 
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_width, bar_height), 2, border_radius=10)
     
-    if objetivo > 0:
-        proporcion = min(puntuacion_mostrar / objetivo, 1)
+    if objetivos_por_nivel[nivel] > 0:
+        proporcion = min(puntuacion_mostrar / objetivos_por_nivel[nivel], 1)
         fill_height = int(bar_height * proporcion)
         fill_y = y + bar_height - fill_height
         pygame.draw.rect(pantalla, (255, 215, 0), (x, fill_y, bar_width, fill_height), border_radius=10)
@@ -608,10 +607,10 @@ def mostrar_reporte():
         page0_slots.append(pygame.Rect(rx, ry, rec_w, rec_h))
     posiciones_pagina[0] = page0_slots
 
-    if astros_sin_pos:
-        page1_extra_pages = (len(astros_sin_pos) - 1) // 8 + 1
-        for p in range(1, page1_extra_pages + 1):
-            posiciones_pagina[p] = [pygame.Rect(r.x, r.y, r.w, r.h) for r in page0_slots]
+    max_pos = max((a.get("posicion", 0) for a in astros), default=0)
+    total_pags = (max_pos // 8) + 1
+    for p in range(1, total_pags):
+        posiciones_pagina[p] = [pygame.Rect(r.x, r.y, r.w, r.h) for r in page0_slots]
 
     if pagina_actual >= len(posiciones_pagina):
         pagina_actual = 0
@@ -641,21 +640,14 @@ def mostrar_reporte():
             if not (pixel_img and real_img):
                 continue
             astro_texto = astro_data["texto"] if astro_data else ""
-            if pos is not None and 0 <= pos < len(posiciones_pagina[0]):
-                rect_dest = posiciones_pagina[0][pos]
-                pagina = 0
-            else:
-                try:
-                    idx_sin = next(i for i, a in enumerate(astros_sin_pos) if a["nombre"] == clave)
-                    target_page = 1 + idx_sin // 8
-                    target_slot = idx_sin % 8
-                    if target_page in posiciones_pagina and target_slot < len(posiciones_pagina[target_page]):
-                        rect_dest = posiciones_pagina[target_page][target_slot]
-                        pagina = target_page
-                    else:
-                        continue
-                except StopIteration:
+            if pos is not None:
+                pagina, slot = obtener_pagina_slot(pos)
+                if pagina in posiciones_pagina and slot < len(posiciones_pagina[pagina]):
+                    rect_dest = posiciones_pagina[pagina][slot]
+                else:
                     continue
+            else:
+                continue
             foto = FotoReporte(clave, astro_texto, rect_min, rect_dest, pixel_img, real_img)
             foto.pagina = pagina
             fotos_reporte_instancias.append(foto)
@@ -703,11 +695,14 @@ def mostrar_reporte():
         if pag == pagina_actual and pag in posiciones_pagina and slot_idx < len(posiciones_pagina[pag]):
             real_img = assets_reales.get(clave)
             if real_img:
-                img_pegada = pygame.transform.scale(real_img, (rec_w, rec_h))
-                pantalla.blit(img_pegada, posiciones_pagina[pag][slot_idx])
+                img_pegada = escalar_rellenar(real_img, rec_w, rec_h)
+                rect_slot = posiciones_pagina[pag][slot_idx]
+                img_rect = img_pegada.get_rect(center=rect_slot.center)
+                pantalla.blit(img_pegada, img_rect)
 
+    pegadas_permanentes_claves = {c for c, _, _ in fotos_pegadas_permanentes}
     for f in fotos_reporte_instancias:
-        if f.estado == 'pegada' and f.pagina == pagina_actual:
+        if f.estado == 'pegada' and f.pagina == pagina_actual and f.clave not in pegadas_permanentes_claves:
             pantalla.blit(f.image, f.rect)
 
     todas_pegadas = all(f.estado == 'pegada' for f in fotos_reporte_instancias)
@@ -732,7 +727,7 @@ def mostrar_reporte():
             b = int(255 - lt * 255)
         color_texto = (r, g, b)
     if todas_pegadas:
-        if puntuacion >= objetivo:
+        if puntuacion >= objetivos_por_nivel[nivel]:
             texto = fuente_normal.render("Avanzar al siguiente nivel", False, (255, 215, 0))
         else:
             texto = fuente_normal.render("Intentar de nuevo", False, (255, 0, 0))
@@ -909,6 +904,23 @@ pantalla.blit(texto_carga, (ancho // 2 - texto_carga.get_width() // 2, alto // 2
 pygame.display.flip()
 pygame.event.pump()
 
+def escalar_proporcional(image, target_w, target_h):
+    iw, ih = image.get_size()
+    escala = min(target_w / iw, target_h / ih)
+    nuevo_w = int(iw * escala)
+    nuevo_h = int(ih * escala)
+    return pygame.transform.scale(image, (nuevo_w, nuevo_h))
+
+def escalar_rellenar(image, target_w, target_h):
+    iw, ih = image.get_size()
+    escala = max(target_w / iw, target_h / ih)
+    nuevo_w = int(iw * escala)
+    nuevo_h = int(ih * escala)
+    scaled = pygame.transform.scale(image, (nuevo_w, nuevo_h))
+    crop_x = (nuevo_w - target_w) // 2
+    crop_y = (nuevo_h - target_h) // 2
+    return scaled.subsurface((crop_x, crop_y, target_w, target_h)).copy()
+
 def render_gradiente_texto(fuente, texto, color1, color2):
     text_surf = fuente.render(texto, True, (255, 255, 255))
     w, h = text_surf.get_size()
@@ -992,21 +1004,30 @@ assets_astros = {
     "Urano": cargar_imagen("assets/Graphics/Astros/Urano.png", (140, 140)),
     "Neptuno": cargar_imagen("assets/Graphics/Astros/Neptuno.png", (140, 140)),
     "Estrella": cargar_imagen("assets/Graphics/Astros/Estrella.png", (45, 45)),
+    "CometaHalley": cargar_imagen("assets/Graphics/Astros/Cometa.png", (140, 140)),
+    "AgujeroNegro": cargar_imagen("assets/Graphics/Astros/Agujero.png", (140, 76)),
+    "Nebulosa": cargar_imagen("assets/Graphics/Astros/Nebulosa.png", (140, 140)),
+    "Galaxia": cargar_imagen("assets/Graphics/Astros/Galaxia.png", (140, 140)),
+    "Agujero De Gusano": cargar_imagen("assets/Graphics/Astros/Gusano.png", (140, 140)),
+    "Ovni": cargar_imagen("assets/Graphics/Astros/Ovni.png", (140, 140)),
     }
 
 assets_reales = {}
 def cargar_assets_reales():
     if assets_reales:
         return
-    nombres_reales = ["Luna", "Venus", "Mercurio", "Marte", "Estacion", "Jupiter", "Saturno", "Urano", "Neptuno", "Estrella"]
-    archivos_reales = {
-        "Luna": "Luna-Real.png", "Venus": "Venus-Real.png", "Mercurio": "Mercurio-Real.png",
-        "Marte": "Marte-Real.png", "Estacion": "Estacion-Real.png", "Jupiter": "Jupiter-Real.png",
-        "Saturno": "Saturno-Real.png", "Urano": "Urano-Real.png", "Neptuno": "Neptuno-Real.png",
-        "Estrella": "Estrella-Real.png",
-    }
-    for nombre in nombres_reales:
-        assets_reales[nombre] = cargar_imagen(f"assets/Graphics/Reales/{archivos_reales[nombre]}")
+    for astro in astros:
+        nombre = astro["nombre"]
+        archivo = astro.get("real")
+        if archivo:
+            ruta = f"assets/Graphics/Reales/{archivo}.png"
+            try:
+                assets_reales[nombre] = cargar_imagen(ruta)
+            except FileNotFoundError:
+                try:
+                    assets_reales[nombre] = cargar_imagen(f"assets/Graphics/Reales/{archivo}.jpeg")
+                except FileNotFoundError:
+                    pass
 
 astros = []
 with open("data/astros.json", "r") as f:
@@ -1014,8 +1035,11 @@ with open("data/astros.json", "r") as f:
     for item in datos["astros"]:
         astros.append(item)
 
-astros_sin_pos = [a for a in astros if "posicion" not in a]
-total_paginas = 1 + (len(astros_sin_pos) + 7) // 8 if astros_sin_pos else 1
+def obtener_pagina_slot(pos):
+    return pos // 8, pos % 8
+
+max_pos = max((a.get("posicion", 0) for a in astros), default=0)
+total_paginas = (max_pos // 8) + 1
 pagina_actual = 0
 
 
@@ -1046,7 +1070,13 @@ fotos_pegadas_permanentes = []  # [(clave, pos_idx)] astros pegados en niveles a
 nivel = 1
 
 ##Objetivo
-objetivo = 500
+objetivos_por_nivel = {
+    1: 500,
+    2: 1000,
+    3: 2000,
+    4: 3500,
+    5: 5000
+}
 
 ##Nombre jugador
 nombre_jugador = ""
@@ -1153,7 +1183,11 @@ while True:
                                 rx = start_x + group * (group_w + sep) + c * (rec_w + gap)
                                 ry = start_y + r * (rec_h + gap)
                                 page0_slots.append(pygame.Rect(rx, ry, rec_w, rec_h))
-                            astros_sin_pos = [a for a in astros if "posicion" not in a]
+                            posiciones_pagina = {0: page0_slots}
+                            max_pos = max((a.get("posicion", 0) for a in astros), default=0)
+                            total_pags = (max_pos // 8) + 1
+                            for p in range(1, total_pags):
+                                posiciones_pagina[p] = [pygame.Rect(r.x, r.y, r.w, r.h) for r in page0_slots]
                             for clave_astro in album_puntajes_astros:
                                 astro_data = next((a for a in astros if a["nombre"] == clave_astro), None)
                                 if astro_data is None:
@@ -1163,18 +1197,14 @@ while True:
                                 real_img = assets_reales.get(clave_astro)
                                 if not (pixel_img and real_img):
                                     continue
-                                if pos is not None and 0 <= pos < len(page0_slots):
-                                    rect_dest = page0_slots[pos]
-                                    pagina = 0
-                                else:
-                                    try:
-                                        idx_sin = next(i for i, a in enumerate(astros_sin_pos) if a["nombre"] == clave_astro)
-                                        target_page = 1 + idx_sin // 8
-                                        target_slot = idx_sin % 8
-                                        rect_dest = page0_slots[target_slot]
-                                        pagina = target_page
-                                    except StopIteration:
+                                if pos is not None:
+                                    pagina, slot = obtener_pagina_slot(pos)
+                                    if pagina in posiciones_pagina and slot < len(posiciones_pagina[pagina]):
+                                        rect_dest = posiciones_pagina[pagina][slot]
+                                    else:
                                         continue
+                                else:
+                                    continue
                                 foto = FotoReporte(clave_astro, astro_data.get("texto", ""), pygame.Rect(0, 0, 1, 1), rect_dest, pixel_img, real_img)
                                 foto.pagina = pagina
                                 foto.pegar()
@@ -1302,7 +1332,7 @@ while True:
                 p = tomar_foto()
                 puntuacion += p
                 puntuacion_total_partida += p
-                if puntuacion >= objetivo:
+                if puntuacion >= objetivos_por_nivel[nivel]:
                     tiempo_pausado = True
                     tipo_pausa = "objetivo"
                     tiempo_fotos_agotadas = pygame.time.get_ticks()
@@ -1321,15 +1351,9 @@ while True:
                         pegando = True
                         pos_idx = next((a.get("posicion") for a in astros if a["nombre"] == f.clave), None)
                         if pos_idx is not None:
-                            pag_peg = 0
-                            slot_peg = pos_idx
+                            pag_peg, slot_peg = obtener_pagina_slot(pos_idx)
                         else:
-                            try:
-                                idx_sin = next(i for i, a in enumerate(astros_sin_pos) if a["nombre"] == f.clave)
-                                pag_peg = 1 + idx_sin // 8
-                                slot_peg = idx_sin % 8
-                            except StopIteration:
-                                pag_peg = None
+                            pag_peg = None
                         if pag_peg is not None and (f.clave, pag_peg, slot_peg) not in fotos_pegadas_permanentes:
                             fotos_pegadas_permanentes.append((f.clave, pag_peg, slot_peg))
                         break
@@ -1369,8 +1393,15 @@ while True:
                         f.hover = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 if todas_pegadas:
-                    if puntuacion >= objetivo:
-                        nivel += 1
+                    if puntuacion >= objetivos_por_nivel[nivel]:
+                        if nivel < 5:
+                            nivel += 1
+                        else:
+                            nivel = 1
+                            puntuacion_total_partida = 0
+                            fotos_pegadas_permanentes.clear()
+                            album.clear()
+                            coleccion.clear()
                         coleccion.extend(album)
                         album.clear()
                     else:

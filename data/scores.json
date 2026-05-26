@@ -145,6 +145,87 @@
             ],
             "fecha_hora": "2026-05-24 22:03:09",
             "cantidad_partidas": 1
+        },
+        "asdada": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "qasdas": {
+            "puntuacion_total": 2900,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Jupiter",
+                "Venus",
+                "Mercurio",
+                "Luna",
+                "Estacion",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-26 19:22:59",
+            "cantidad_partidas": 1
+        },
+        "sadaas": {
+            "puntuacion_total": 7100,
+            "nivel_maximo": 3,
+            "astros_descubiertos": [
+                "Estrella",
+                "Saturno",
+                "Neptuno",
+                "Estacion",
+                "Venus",
+                "Marte",
+                "Urano",
+                "AgujeroNegro",
+                "Jupiter",
+                "Mercurio",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-26 19:26:31",
+            "cantidad_partidas": 1
+        },
+        "ggh\r": {
+            "puntuacion_total": 5450,
+            "nivel_maximo": 3,
+            "astros_descubiertos": [
+                "Venus",
+                "Jupiter",
+                "Saturno",
+                "Neptuno",
+                "Urano",
+                "Luna",
+                "Marte",
+                "Estrella",
+                "Mercurio"
+            ],
+            "fecha_hora": "2026-05-26 19:40:16",
+            "cantidad_partidas": 1
+        },
+        "sadadsa": {
+            "puntuacion_total": 15600,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Venus",
+                "Jupiter",
+                "AgujeroNegro",
+                "Agujero De Gusano",
+                "Saturno",
+                "Neptuno",
+                "Urano",
+                "Luna",
+                "Marte",
+                "Estrella",
+                "Galaxia",
+                "Mercurio",
+                "Nebulosa",
+                "Estacion",
+                "Ovni"
+            ],
+            "fecha_hora": "2026-05-26 19:42:36",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -300,9 +381,102 @@
                 "Luna"
             ],
             "fecha_hora": "2026-05-24 22:03:09"
+        },
+        {
+            "nombre": "asdada",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-05-26 19:19:37"
+        },
+        {
+            "nombre": "qasdas",
+            "puntuacion_total": 2900,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Jupiter",
+                "Venus",
+                "Mercurio",
+                "Luna",
+                "Estacion",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-26 19:22:59"
+        },
+        {
+            "nombre": "sadaas",
+            "puntuacion_total": 7100,
+            "nivel_maximo": 3,
+            "astros_descubiertos": [
+                "Estrella",
+                "Saturno",
+                "Neptuno",
+                "Estacion",
+                "Venus",
+                "Marte",
+                "Urano",
+                "AgujeroNegro",
+                "Jupiter",
+                "Mercurio",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-26 19:26:31"
+        },
+        {
+            "nombre": "ggh\r",
+            "puntuacion_total": 5450,
+            "nivel_maximo": 3,
+            "astros_descubiertos": [
+                "Venus",
+                "Jupiter",
+                "Saturno",
+                "Neptuno",
+                "Urano",
+                "Luna",
+                "Marte",
+                "Estrella",
+                "Mercurio"
+            ],
+            "fecha_hora": "2026-05-26 19:40:16"
+        },
+        {
+            "nombre": "sadadsa",
+            "puntuacion_total": 15600,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Venus",
+                "Jupiter",
+                "AgujeroNegro",
+                "Agujero De Gusano",
+                "Saturno",
+                "Neptuno",
+                "Urano",
+                "Luna",
+                "Marte",
+                "Estrella",
+                "Galaxia",
+                "Mercurio",
+                "Nebulosa",
+                "Estacion",
+                "Ovni"
+            ],
+            "fecha_hora": "2026-05-26 19:42:36"
         }
     ],
     "top_scores": [
+        {
+            "nombre": "sadadsa",
+            "puntos": 15600
+        },
+        {
+            "nombre": "sadaas",
+            "puntos": 7100
+        },
+        {
+            "nombre": "ggh\r",
+            "puntos": 5450
+        },
         {
             "nombre": "asadsa",
             "puntos": 4000
@@ -310,6 +484,10 @@
         {
             "nombre": "sosa",
             "puntos": 3100
+        },
+        {
+            "nombre": "qasdas",
+            "puntos": 2900
         },
         {
             "nombre": "Manuel",
@@ -357,6 +535,10 @@
         },
         {
             "nombre": "asdaas",
+            "puntos": 0
+        },
+        {
+            "nombre": "asdada",
             "puntos": 0
         }
     ]
