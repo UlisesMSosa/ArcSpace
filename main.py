@@ -20,6 +20,7 @@ ESTADO_JUGANDO           = "jugando"
 ESTADO_REPORTE           = "reporte"
 ESTADO_PUNTAJES          = "puntajes"
 ESTADO_ALBUM_PUNTAJES    = "album_puntajes"
+ESTADO_FELICITACION      = "felicitacion"
 
 ESTADOS_INTERMISION = (
     ESTADO_INTERMISION1, ESTADO_INTERMISION2,
@@ -155,7 +156,8 @@ def calcular_slots_album():
 def calcular_posiciones_pagina(astros_data):
     """Devuelve {pagina: [slots]} para todas las páginas necesarias."""
     slots_base = calcular_slots_album()
-    max_pos    = max((a.get("posicion", 0) for a in astros_data), default=0)
+    posiciones = [a["posicion"] for a in astros_data if "posicion" in a]
+    max_pos    = max(posiciones) if posiciones else 0
     total_pags = (max_pos // 8) + 1
     return {p: [pygame.Rect(s.x, s.y, s.w, s.h) for s in slots_base]
             for p in range(total_pags)}
@@ -349,6 +351,8 @@ class FotoReporte(pygame.sprite.Sprite):
         self.rect  = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
 
         if self.angulo >= 10 * math.pi and abs(seno) > 0.95:
+            # La imagen real aparece de golpe; guardamos el momento para el flash
+            self._flash_inicio = pygame.time.get_ticks()
             self.image = escalar_rellenar(self.superficie_real, *self.tamanio_anim)
             self.rect  = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
             self.estado = 'revelada'
@@ -785,19 +789,37 @@ def mostrar_reporte():
             f.update()
             pantalla.blit(f.image, f.rect)
 
-    # Fotos reveladas (nuevas o permanentes)
+    # Fotos reveladas (nuevas o permanentes) con overlay y flash de revelado
     for f in fotos_reporte_instancias + fotos_permanentes_vista:
         if f.estado == 'revelada':
             f.update()
+            # Overlay oscuro para enfocar la foto
+            overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 160))
+            pantalla.blit(overlay, (0, 0))
+            # Borde dorado sólido
+            border_rect = f.rect.inflate(6, 6)
+            pygame.draw.rect(pantalla, (255, 215, 0), border_rect, 3, border_radius=8)
             pantalla.blit(f.image, f.rect)
+            # Flash blanco que se desvanece en 0.6s desde el momento del revelado
+            if hasattr(f, '_flash_inicio'):
+                elapsed = (pygame.time.get_ticks() - f._flash_inicio) / 1000
+                if elapsed < 0.6:
+                    fa = int(255 * (1 - elapsed / 0.6))
+                    flash_s = pygame.Surface(f.rect.size, pygame.SRCALPHA)
+                    flash_s.fill((255, 255, 255, fa))
+                    pantalla.blit(flash_s, f.rect)
+                else:
+                    del f._flash_inicio
             dibujar_panel_foto_revelada(pantalla, f)
+            break  # solo una foto revelada a la vez
 
     # Texto de instrucción inferior
     _dibujar_instruccion_reporte()
 
     dibujar_flechas_album(pantalla, pagina_actual, len(posiciones_pagina))
 
-    # Botón volver al menú
+    # Botón volver al menú (siempre visible)
     txt_m = fuente_pequena.render("Volver al menu", False, (255, 255, 255))
     r_m   = txt_m.get_rect(left=20, centery=ALTO - 30)
     pantalla.blit(txt_m, r_m)
@@ -809,25 +831,27 @@ def _dibujar_cabecera_reporte(posiciones_pagina):
     """Dibuja el rectángulo superior con las miniaturas de fotos nuevas."""
     rx = (ANCHO - int(ANCHO * 0.9)) // 2
     rect_ancho, rect_alto = int(ANCHO * 0.9), 110
-    pygame.draw.rect(pantalla, (100, 0, 180), (rx, 0, rect_ancho, rect_alto), border_radius=20)
+    pygame.draw.rect(pantalla, (100, 0, 180), (rx, 0, rect_ancho, rect_alto), border_radius=16)
+    # Borde blanco fino
+    pygame.draw.rect(pantalla, (180, 120, 255), (rx, 0, rect_ancho, rect_alto), 2, border_radius=16)
 
     label = fuente_media.render("fotos nuevas:", False, (255, 255, 255))
-    pantalla.blit(label, (rx + 10, (rect_alto - label.get_height()) // 2))
+    pantalla.blit(label, (rx + 18, (rect_alto - label.get_height()) // 2))
 
     if not album:
         return
 
     tamano, espacio = 80, 20
+    label_w = 18 + label.get_width() + 20
+
     # Inicializar instancias de FotoReporte si todavía no existen
     if not fotos_reporte_instancias:
         _inicializar_fotos_reporte(posiciones_pagina, rx, rect_ancho, rect_alto, tamano, espacio)
 
-    # Sólo contar y dibujar fotos que aún no están pegadas (evita espacios en blanco)
+    # Sólo contar y dibujar fotos que aún no están pegadas
     claves_pegadas = {f.clave for f in fotos_reporte_instancias if f.estado == 'pegada'}
     claves_pegadas |= {c for c, _, _ in fotos_pegadas_permanentes}
-    items_dibujables = [item for item in album
-                        if item["nombre"] not in claves_pegadas]
-    # Deduplicar manteniendo orden
+    items_dibujables = [item for item in album if item["nombre"] not in claves_pegadas]
     vistas, items_unicos = set(), []
     for item in items_dibujables:
         if item["nombre"] not in vistas:
@@ -838,12 +862,20 @@ def _dibujar_cabecera_reporte(posiciones_pagina):
     if total_fotos == 0:
         return
     inicio_x = rx + (rect_ancho - total_fotos * tamano - (total_fotos - 1) * espacio) // 2
-    inicio_x = max(inicio_x, rx + 10 + label.get_width() + 20)
+    inicio_x = max(inicio_x, rx + label_w)
     y_foto = (rect_alto - tamano) // 2
 
+    # Actualizar rect_miniatura de instancias no pegadas para que el hit-test sea correcto
+    instancia_por_clave = {f.clave: f for f in fotos_reporte_instancias if f.estado != 'pegada'}
     for draw_idx, item in enumerate(items_unicos):
         clave = item["nombre"]
         px = inicio_x + draw_idx * (tamano + espacio)
+        if clave in instancia_por_clave:
+            inst = instancia_por_clave[clave]
+            inst.rect_miniatura = pygame.Rect(px, y_foto, tamano, tamano)
+            if inst.estado == 'oculta_en_libro':
+                inst.rect = inst.rect_miniatura.copy()
+
         pygame.draw.rect(pantalla, (212, 193, 190), (px - 6, y_foto - 6, tamano + 12, tamano + 12), border_radius=2)
         pygame.draw.rect(pantalla, (0, 0, 0),       (px - 6, y_foto - 6, tamano + 12, tamano + 12), 3, border_radius=2)
         img = assets_astros.get(clave)
@@ -856,7 +888,7 @@ def _dibujar_cabecera_reporte(posiciones_pagina):
 
 
 def _inicializar_fotos_reporte(posiciones_pagina, rx, rect_ancho, rect_alto, tamano, espacio):
-    label_w         = fuente_media.size("fotos nuevas:")[0]
+    label_w         = 18 + fuente_media.size("fotos nuevas:")[0] + 20
     permanentes_claves = {c for c, _, _ in fotos_pegadas_permanentes}
 
     # Obtener items únicos dibujables (sin permanentes ni duplicados)
@@ -871,7 +903,7 @@ def _inicializar_fotos_reporte(posiciones_pagina, rx, rect_ancho, rect_alto, tam
     if total == 0:
         return
     inicio_x = rx + (rect_ancho - total * tamano - (total - 1) * espacio) // 2
-    inicio_x = max(inicio_x, rx + 10 + label_w + 20)
+    inicio_x = max(inicio_x, rx + label_w + 10)
     y_foto = (rect_alto - tamano) // 2
 
     for draw_idx, item in enumerate(items_unicos):
@@ -1223,32 +1255,21 @@ def eventos_reporte(event):
     if event.type == pygame.MOUSEBUTTONDOWN:
         pos = event.pos
 
-        # Pegar foto nueva revelada → registrar permanente y saltar página
-        for f in fotos_reporte_instancias:
-            if f.estado == 'revelada' and f.rect.collidepoint(pos):
+        # PRIMERO: si hay cualquier foto revelada (nueva o permanente), el click siempre la pega
+        for f in fotos_reporte_instancias + fotos_permanentes_vista:
+            if f.estado == 'revelada':
                 f.pegar()
-                pos_idx = next((a.get("posicion") for a in astros if a["nombre"] == f.clave), None)
-                if pos_idx is not None:
-                    pag, slot = obtener_pagina_slot(pos_idx)
-                    entrada = (f.clave, pag, slot)
-                    if entrada not in fotos_pegadas_permanentes:
-                        fotos_pegadas_permanentes.append(entrada)
-                    pagina_actual = pag  # Fix 4: saltar a la página donde se pegó
+                # Si es una foto nueva, registrarla como permanente
+                if f in fotos_reporte_instancias:
+                    pos_idx = next((a.get("posicion") for a in astros if a["nombre"] == f.clave), None)
+                    if pos_idx is not None:
+                        pag, slot = obtener_pagina_slot(pos_idx)
+                        entrada = (f.clave, pag, slot)
+                        if entrada not in fotos_pegadas_permanentes:
+                            fotos_pegadas_permanentes.append(entrada)
+                        pagina_actual = pag
                 return
 
-        # Revelar foto nueva ya pegada (ampliar)
-        claves_permanentes = {f.clave for f in fotos_permanentes_vista}
-        for f in fotos_reporte_instancias:
-            if f.estado == 'pegada' and f.rect.collidepoint(pos) and f.clave not in claves_permanentes:
-                f.revelar_ampliado(); return
-
-        # Fix 5: interactuar con fotos permanentes (rondas anteriores)
-        for f in fotos_permanentes_vista:
-            if f.estado == 'revelada' and f.rect.collidepoint(pos):
-                f.pegar(); return
-        for f in fotos_permanentes_vista:
-            if f.estado == 'pegada' and f.rect.collidepoint(pos) and f.pagina == pagina_actual:
-                f.revelar_ampliado(); return
 
         # Revelar foto oculta (nueva)
         for f in fotos_reporte_instancias:
@@ -1273,7 +1294,7 @@ def eventos_reporte(event):
                     if f.estado == 'oculta_en_libro':
                         f.estado = 'girando'; break
 
-        if event.key == pygame.K_m and todas_pegadas:
+        if event.key == pygame.K_m:
             guardar_puntuacion()
             nombres_existentes.add(nombre_jugador.lower())
             _resetear_partida_completa()
@@ -1285,16 +1306,20 @@ def _avanzar_o_reiniciar():
     global fotos, fotos_reporte_instancias, fotos_permanentes_vista
     global album, coleccion, fotos_pegadas_permanentes
     global fotos_tutorial, tipo_pausa, tiempo_inicio_intermision_mejora
+    global felicitacion_fotos, felicitacion_puntaje, felicitacion_ticks
 
     if puntuacion >= OBJETIVOS_POR_NIVEL[nivel]:
-        if nivel < 5:
-            nivel += 1
+        if nivel == 5:
+            # ¡Juego completo! Mostrar pantalla de felicitación
+            felicitacion_fotos   = len(set(a["nombre"] for a in album)) + len(set(a["nombre"] for a in coleccion))
+            felicitacion_puntaje = puntuacion_total_partida + puntuacion
+            felicitacion_ticks   = pygame.time.get_ticks()
+            guardar_puntuacion()
+            nombres_existentes.add(nombre_jugador.lower())
+            estado_actual = ESTADO_FELICITACION
+            return
         else:
-            nivel = 1
-            puntuacion_total_partida = 0
-            fotos_pegadas_permanentes.clear()
-            album.clear()
-            coleccion.clear()
+            nivel += 1
         coleccion.extend(album)
         album.clear()
     else:
@@ -1423,6 +1448,12 @@ fotos_reporte_instancias  = []
 fotos_permanentes_vista   = []   # instancias FotoReporte para fotos de rondas anteriores
 fotos_pegadas_permanentes = []
 
+felicitacion_fotos   = 0
+felicitacion_puntaje = 0
+felicitacion_ticks   = 0
+felicitacion_boton_jugar_rect = pygame.Rect(0, 0, 0, 0)
+felicitacion_boton_menu_rect  = pygame.Rect(0, 0, 0, 0)
+
 flash_activo = False
 flash_tiempo = 0
 
@@ -1464,6 +1495,153 @@ camara       = pygame.sprite.GroupSingle()
 camara.add(Camara(ANCHO, ALTO))
 
 # ---------------------------------------------------------------------------
+# Pantalla: Felicitación final (nivel 5 completado)
+# ---------------------------------------------------------------------------
+
+def mostrar_felicitacion():
+    """Pantalla de celebración al completar el nivel 5."""
+    global felicitacion_boton_jugar_rect, felicitacion_boton_menu_rect
+    t     = pygame.time.get_ticks() / 1000
+    since = pygame.time.get_ticks() - felicitacion_ticks
+
+    # --- Fondo: destellos de estrellas ---
+    if not hasattr(mostrar_felicitacion, '_stars'):
+        import random as _rnd
+        mostrar_felicitacion._stars = [
+            (_rnd.randint(0, ANCHO), _rnd.randint(0, ALTO),
+             _rnd.uniform(0.5, 2.5), _rnd.uniform(0, math.pi * 2))
+            for _ in range(120)
+        ]
+    for sx, sy, spd, phase in mostrar_felicitacion._stars:
+        a = int(120 + 120 * math.sin(t * spd + phase))
+        sz = max(1, int(1 + math.sin(t * spd + phase + 1)))
+        c = (255, 215, 0) if (sx + sy) % 3 == 0 else (200, 150, 255) if (sx + sy) % 3 == 1 else (255, 255, 255)
+        star_s = pygame.Surface((sz * 2, sz * 2), pygame.SRCALPHA)
+        pygame.draw.circle(star_s, (*c, a), (sz, sz), sz)
+        pantalla.blit(star_s, (sx - sz, sy - sz))
+
+    # --- Título con gradiente y flotación ---
+    float_y = int(ALTO // 6 + math.sin(t * 1.2) * 8)
+    titulo = render_gradiente_texto(fuente_titulo_grande, "¡FELICIDADES!", (255, 215, 0), (200, 80, 255))
+    # Añadir halo brillante bajo el título
+    halo_a = int(60 + 40 * math.sin(t * 2))
+    halo = pygame.Surface((titulo.get_width() + 60, titulo.get_height() + 30), pygame.SRCALPHA)
+    pygame.draw.ellipse(halo, (255, 215, 0, halo_a), halo.get_rect())
+    pantalla.blit(halo, halo.get_rect(center=(ANCHO // 2, float_y)))
+    pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, float_y)))
+
+    # --- Subtítulo ---
+    sub = fuente_media.render("¡Completaste los 5 niveles!", False, (255, 255, 255))
+    pantalla.blit(sub, sub.get_rect(center=(ANCHO // 2, float_y + 90)))
+
+    # --- Panel central de estadísticas ---
+    panel_w, panel_h = 600, 200
+    panel_x = (ANCHO - panel_w) // 2
+    panel_y = ALTO // 2 - 60
+    panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+    # Gradiente del panel
+    for px_ in range(panel_w):
+        gt = px_ / max(panel_w - 1, 1)
+        pr = int(40 + gt * 60)
+        pg = int(0)
+        pb = int(80 + gt * 80)
+        pygame.draw.line(panel_surf, (pr, pg, pb, 210), (px_, 0), (px_, panel_h))
+    pulse_b = 0.5 + 0.5 * math.sin(t * 2.5)
+    ba = int(160 + 80 * pulse_b)
+    pygame.draw.rect(panel_surf, (255, 215, 0, ba), (0, 0, panel_w, panel_h), 3, border_radius=20)
+    pygame.draw.rect(panel_surf, (0, 0, 0, 0), (0, 0, panel_w, panel_h), border_radius=20)
+    pantalla.blit(panel_surf, (panel_x, panel_y))
+
+    # Ícono cámara + fotos tomadas
+    cam_icon = pygame.transform.scale(img_camara, (50, 50))
+    pantalla.blit(cam_icon, (panel_x + 40, panel_y + panel_h // 2 - 50))
+    lbl_fotos = fuente_normal.render("FOTOS CAPTURADAS", False, (200, 200, 255))
+    val_fotos = fuente_titulo.render(str(felicitacion_fotos), False, (255, 215, 0))
+    pantalla.blit(lbl_fotos, (panel_x + 105, panel_y + 30))
+    pantalla.blit(val_fotos, (panel_x + 105, panel_y + 65))
+
+    # Separador vertical
+    pygame.draw.line(pantalla, (255, 215, 0, 120),
+                     (panel_x + panel_w // 2, panel_y + 20),
+                     (panel_x + panel_w // 2, panel_y + panel_h - 20), 2)
+
+    # Estrella + puntaje
+    star_txt = fuente_titulo.render("★", False, (255, 215, 0))
+    pantalla.blit(star_txt, (panel_x + panel_w // 2 + 20, panel_y + panel_h // 2 - 50))
+    lbl_pts = fuente_normal.render("PUNTAJE TOTAL", False, (200, 200, 255))
+    val_pts = fuente_titulo.render(str(felicitacion_puntaje), False, (255, 215, 0))
+    pantalla.blit(lbl_pts, (panel_x + panel_w // 2 + 80, panel_y + 30))
+    pantalla.blit(val_pts, (panel_x + panel_w // 2 + 80, panel_y + 65))
+
+    # --- Botones ---
+    btn_y = panel_y + panel_h + 60
+    mouse  = pygame.mouse.get_pos()
+
+    def _btn_felicit(texto, cx, highlight):
+        pulse2 = 0.5 + 0.5 * math.sin(t * 3 + cx)
+        surf_t = fuente_normal.render(texto, False, (255, 255, 255))
+        r = surf_t.get_rect(center=(cx, btn_y))
+        bg = r.inflate(30, 16)
+        hover = bg.collidepoint(mouse)
+        color_bg = (180, 80, 255) if hover else (100, 0, 200)
+        if hover:
+            glow_s = pygame.Surface((bg.width + 20, bg.height + 20), pygame.SRCALPHA)
+            ga2 = int(60 + 40 * pulse2)
+            pygame.draw.rect(glow_s, (200, 100, 255, ga2),
+                             (0, 0, bg.width + 20, bg.height + 20), border_radius=14)
+            pantalla.blit(glow_s, (bg.x - 10, bg.y - 10))
+        pygame.draw.rect(pantalla, color_bg, bg, border_radius=10)
+        pygame.draw.rect(pantalla, (255, 215, 0) if highlight else (200, 100, 255), bg, 2, border_radius=10)
+        pantalla.blit(surf_t, r)
+        return bg
+
+    felicitacion_boton_jugar_rect = _btn_felicit("JUGAR DE NUEVO", ANCHO // 2 - 170, True)
+    felicitacion_boton_menu_rect  = _btn_felicit("VOLVER AL MENU", ANCHO // 2 + 170, False)
+
+    # --- Hint de teclado ---
+    hint = fuente_pequena.render("ESPACIO = Jugar de nuevo   |   M = Menú", False, (180, 180, 180))
+    pantalla.blit(hint, hint.get_rect(center=(ANCHO // 2, ALTO - 30)))
+
+
+def eventos_felicitacion(event):
+    global estado_actual
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            _iniciar_nueva_partida_felicit()
+        elif event.key in (pygame.K_m, pygame.K_ESCAPE):
+            _resetear_partida_completa()
+            estado_actual = ESTADO_MENU
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        pos = event.pos
+        if felicitacion_boton_jugar_rect.collidepoint(pos):
+            _iniciar_nueva_partida_felicit()
+        elif felicitacion_boton_menu_rect.collidepoint(pos):
+            _resetear_partida_completa()
+            estado_actual = ESTADO_MENU
+
+
+def _iniciar_nueva_partida_felicit():
+    global estado_actual, nivel, puntuacion, puntuacion_total_partida
+    global fotos, fotos_tutorial, fotos_reporte_instancias, fotos_permanentes_vista
+    global fotos_pegadas_permanentes, album, coleccion, tipo_pausa
+    global nombre_jugador, tiempo_inicio_intermision1
+
+    fotos_pegadas_permanentes.clear()
+    album.clear()
+    coleccion.clear()
+    fotos_reporte_instancias.clear()
+    fotos_permanentes_vista.clear()
+    nivel = 1
+    puntuacion = puntuacion_total_partida = 0
+    fotos = fotos_tutorial = FOTOS_INICIALES
+    tipo_pausa = ""
+    nombre_jugador = ""
+    if hasattr(mostrar_felicitacion, '_stars'):
+        del mostrar_felicitacion._stars
+    estado_actual = ESTADO_MENU
+
+
+# ---------------------------------------------------------------------------
 # Bucle principal
 # ---------------------------------------------------------------------------
 
@@ -1481,6 +1659,7 @@ while True:
         elif estado_actual == ESTADO_ALBUM_PUNTAJES:   eventos_album_puntajes(event)
         elif estado_actual == ESTADO_JUGANDO:          eventos_jugando(event)
         elif estado_actual == ESTADO_REPORTE:          eventos_reporte(event)
+        elif estado_actual == ESTADO_FELICITACION:     eventos_felicitacion(event)
 
         # Tutoriales: saltar con ESPACIO
         elif estado_actual == ESTADO_INTERMISION1:
@@ -1590,17 +1769,11 @@ while True:
         mostrar_puntos_partida()
 
         if tiempo_pausado:
-            if pygame.time.get_ticks() - tiempo_fotos_agotadas > 2000:
-                fotos_reporte_instancias.clear()
-                pagina_actual = 0
-                fotos = FOTOS_INICIALES
-                tiempo_pausado = False
-                estado_actual = ESTADO_REPORTE
-            else:
-                msg = "OBJETIVO CUMPLIDO" if tipo_pausa == "objetivo" else "FOTOS AGOTADAS"
-                col = (255, 215, 0) if tipo_pausa == "objetivo" else (255, 0, 0)
-                txt = fuente_titulo.render(msg, False, col)
-                pantalla.blit(txt, txt.get_rect(center=(ANCHO // 2, ALTO // 2)))
+            fotos_reporte_instancias.clear()
+            pagina_actual = 0
+            fotos = FOTOS_INICIALES
+            tiempo_pausado = False
+            estado_actual = ESTADO_REPORTE
         else:
             camara.update()
             t_transcurrido = (pygame.time.get_ticks() - ticks_inicio_juego) / 1000
@@ -1629,6 +1802,9 @@ while True:
 
     elif estado_actual == ESTADO_ALBUM_PUNTAJES:
         mostrar_album_puntajes()
+
+    elif estado_actual == ESTADO_FELICITACION:
+        mostrar_felicitacion()
 
     pygame.display.update()
     clock.tick(60)
