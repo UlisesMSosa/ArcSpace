@@ -261,6 +261,20 @@
             ],
             "fecha_hora": "2026-05-27 16:27:01",
             "cantidad_partidas": 1
+        },
+        "test": {
+            "puntuacion_total": 2850,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Luna",
+                "Mercurio",
+                "Estacion",
+                "Estrella",
+                "Venus",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-05-27 16:48:02",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -532,6 +546,20 @@
                 "Estrella"
             ],
             "fecha_hora": "2026-05-27 16:27:01"
+        },
+        {
+            "nombre": "test",
+            "puntuacion_total": 2850,
+            "nivel_maximo": 2,
+            "astros_descubiertos": [
+                "Luna",
+                "Mercurio",
+                "Estacion",
+                "Estrella",
+                "Venus",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-05-27 16:48:02"
         }
     ],
     "top_scores": [
@@ -562,6 +590,10 @@
         {
             "nombre": "qasdas",
             "puntos": 2900
+        },
+        {
+            "nombre": "test",
+            "puntos": 2850
         },
         {
             "nombre": "Manuel",
