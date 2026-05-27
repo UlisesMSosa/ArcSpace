@@ -226,6 +226,41 @@
             ],
             "fecha_hora": "2026-05-26 19:42:36",
             "cantidad_partidas": 1
+        },
+        "Ylsa": {
+            "puntuacion_total": 1200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-26 19:56:01",
+            "cantidad_partidas": 1
+        },
+        "assda": {
+            "puntuacion_total": 16000,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Luna",
+                "Estacion",
+                "Neptuno",
+                "CometaHalley",
+                "Agujero De Gusano",
+                "Urano",
+                "Marte",
+                "Venus",
+                "AgujeroNegro",
+                "Jupiter",
+                "Nebulosa",
+                "Ovni",
+                "Galaxia",
+                "Saturno",
+                "Mercurio",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-27 16:27:01",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -462,9 +497,48 @@
                 "Ovni"
             ],
             "fecha_hora": "2026-05-26 19:42:36"
+        },
+        {
+            "nombre": "Ylsa",
+            "puntuacion_total": 1200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-26 19:56:01"
+        },
+        {
+            "nombre": "assda",
+            "puntuacion_total": 16000,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Luna",
+                "Estacion",
+                "Neptuno",
+                "CometaHalley",
+                "Agujero De Gusano",
+                "Urano",
+                "Marte",
+                "Venus",
+                "AgujeroNegro",
+                "Jupiter",
+                "Nebulosa",
+                "Ovni",
+                "Galaxia",
+                "Saturno",
+                "Mercurio",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-05-27 16:27:01"
         }
     ],
     "top_scores": [
+        {
+            "nombre": "assda",
+            "puntos": 16000
+        },
         {
             "nombre": "sadadsa",
             "puntos": 15600
@@ -500,6 +574,10 @@
         {
             "nombre": "fgaa\r",
             "puntos": 1700
+        },
+        {
+            "nombre": "Ylsa",
+            "puntos": 1200
         },
         {
             "nombre": "hguqub",
