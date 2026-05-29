@@ -105,10 +105,14 @@ def dibujar_rect_punteado(superficie, color, rect, dash=8):
         pygame.draw.line(superficie, color, (x + w, y + i), (x + w, min(y + i + dash, y + h)))
 
 
-def dibujar_boton(pantalla, fuente, texto, rect_base, y_center, right_edge, color_fondo=(100, 0, 180)):
+def dibujar_boton(pantalla, fuente, texto, rect_base, y_center, right_edge=None,
+                  color_fondo=(100, 0, 180), left_edge=None):
     """Dibuja un botón con hover y glow. Devuelve el rect final del botón."""
     surf_base = fuente.render(texto, False, (255, 255, 255))
-    r = surf_base.get_rect(right=right_edge, centery=y_center)
+    if left_edge is not None:
+        r = surf_base.get_rect(left=left_edge, centery=y_center)
+    else:
+        r = surf_base.get_rect(right=right_edge, centery=y_center)
     hover = r.inflate(20, 10).collidepoint(pygame.mouse.get_pos())
     if hover:
         surf = pygame.transform.scale(surf_base, (int(surf_base.get_width() * 1.1), int(surf_base.get_height() * 1.1)))
@@ -671,7 +675,7 @@ def dibujar_slots_album(pantalla_surf, slots, offset_pagina=0):
 # ---------------------------------------------------------------------------
 
 def mostrar_menu():
-    global boton_puntajes_rect
+    global boton_puntajes_rect, boton_salir_rect
     t = pygame.time.get_ticks() / 1000
 
     # Título flotante
@@ -707,12 +711,20 @@ def mostrar_menu():
     instruccion = pygame.transform.scale(base_surf, (w, h))
     pantalla.blit(instruccion, instruccion.get_rect(center=(ANCHO // 2, ALTO // 2 + 140)))
 
+    boton_salir_rect = dibujar_boton(pantalla, fuente_normal, "SALIR (ESC)",
+                                     None, titulo_rect.centery, ANCHO - 20)
     boton_puntajes_rect = dibujar_boton(pantalla, fuente_normal, "PUNTAJES",
-                                        None, titulo_rect.centery, ANCHO - 20)
+                                        None, titulo_rect.centery, ANCHO - 20,
+                                        left_edge=20)
 
     if nombre_erroneo:
         err = fuente_pequena.render("YA EXISTE UN JUGADOR CON ESE NOMBRE", False, (255, 0, 0))
         pantalla.blit(err, err.get_rect(center=(ANCHO // 2, ALTO - 30)))
+
+    creado = fuente_pequena.render("Creado por Ulises Sosa", False, (150, 50, 200))
+    cr = creado.get_rect(center=(ANCHO // 2, ALTO - 20))
+    pantalla.blit(creado, cr)
+    pantalla.blit(img_nacional, img_nacional.get_rect(left=cr.right + 8, centery=cr.centery))
 
 
 def mostrar_puntajes():
@@ -1256,9 +1268,14 @@ def eventos_menu(event):
     global estado_actual, nombre_jugador, nombre_erroneo
     global tiempo_inicio_intermision1, astros_grupo, puntuacion, puntuacion_total_partida
     global tipo_pausa, fotos_tutorial, jugadores_ordenados, scroll_offset
-    global objetivo_completado
+    global objetivo_completado, boton_salir_rect
 
     if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+            if nombre_jugador:
+                guardar_puntuacion()
+            pygame.quit()
+            exit()
         if event.key in (pygame.K_SPACE, pygame.K_RETURN):
             if nombre_jugador and nombre_jugador.lower() not in nombres_existentes:
                 tiempo_inicio_intermision1 = pygame.time.get_ticks()
@@ -1279,14 +1296,20 @@ def eventos_menu(event):
                 nombre_jugador += event.unicode
                 nombre_erroneo = nombre_jugador.lower() in nombres_existentes
 
-    if event.type == pygame.MOUSEBUTTONDOWN and boton_puntajes_rect.collidepoint(event.pos):
-        datos = cargar_scores()
-        jugadores_ordenados = sorted(
-            datos["jugadores"].items(),
-            key=lambda x: x[1]["puntuacion_total"], reverse=True
-        )
-        scroll_offset = 0
-        estado_actual = ESTADO_PUNTAJES
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if boton_puntajes_rect.collidepoint(event.pos):
+            datos = cargar_scores()
+            jugadores_ordenados = sorted(
+                datos["jugadores"].items(),
+                key=lambda x: x[1]["puntuacion_total"], reverse=True
+            )
+            scroll_offset = 0
+            estado_actual = ESTADO_PUNTAJES
+        if boton_salir_rect.collidepoint(event.pos):
+            if nombre_jugador:
+                guardar_puntuacion()
+            pygame.quit()
+            exit()
 
 
 def eventos_puntajes(event):
@@ -1536,7 +1559,7 @@ def _resetear_partida_completa():
 # ---------------------------------------------------------------------------
 
 pygame.init()
-pantalla = pygame.display.set_mode((ANCHO, ALTO))
+pantalla = pygame.display.set_mode((ANCHO, ALTO), pygame.FULLSCREEN | pygame.SCALED)
 pygame.display.set_caption("ArcSpace")
 clock = pygame.time.Clock()
 pantalla.fill((0, 0, 0))
@@ -1567,6 +1590,7 @@ img_right    = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_
 img_m        = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_m.png")
 img_mouse_left = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/mouse_left.png")
 img_uibook   = cargar_imagen("assets/Graphics/UIBook.png", (830, 500))
+img_nacional = escalar_proporcional(cargar_imagen("assets/Graphics/Nacional.png"), 32, 32)
 
 _space_raw   = cargar_imagen("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png")
 img_space    = _space_raw.subsurface((0, 36, 128, 56)).copy()
@@ -1663,6 +1687,7 @@ nombre_erroneo  = False
 scroll_offset   = 0
 jugadores_ordenados = []
 boton_puntajes_rect = pygame.Rect(0, 0, 0, 0)
+boton_salir_rect    = pygame.Rect(0, 0, 0, 0)
 boton_volver_rect   = pygame.Rect(0, 0, 0, 0)
 puntajes_rects      = []
 

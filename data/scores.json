@@ -687,7 +687,7 @@
             "nivel_maximo": 0,
             "astros_descubiertos": [],
             "fecha_hora": "",
-            "cantidad_partidas": 1
+            "cantidad_partidas": 2
         },
         "pla\t": {
             "puntuacion_total": 3050,
@@ -702,6 +702,17 @@
                 "Jupiter"
             ],
             "fecha_hora": "2026-05-29 19:36:21",
+            "cantidad_partidas": 1
+        },
+        "full": {
+            "puntuacion_total": 1100,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion",
+                "Estrella",
+                "Marte"
+            ],
+            "fecha_hora": "2026-05-29 19:47:24",
             "cantidad_partidas": 1
         }
     },
@@ -1470,6 +1481,24 @@
                 "Jupiter"
             ],
             "fecha_hora": "2026-05-29 19:36:21"
+        },
+        {
+            "nombre": "full",
+            "puntuacion_total": 1100,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion",
+                "Estrella",
+                "Marte"
+            ],
+            "fecha_hora": "2026-05-29 19:47:24"
+        },
+        {
+            "nombre": "a",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-05-29 19:51:17"
         }
     ],
     "top_scores": [
@@ -1595,6 +1624,10 @@
         },
         {
             "nombre": "asdas",
+            "puntos": 1100
+        },
+        {
+            "nombre": "full",
             "puntos": 1100
         },
         {
