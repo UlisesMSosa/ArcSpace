@@ -31,6 +31,16 @@ ESTADOS_INTERMISION = (
 
 OBJETIVOS_POR_NIVEL = {1: 500, 2: 1000, 3: 2000, 4: 3500, 5: 5000}
 TIEMPO_INICIAL      = 120
+
+
+def objetivo_nivel5():
+    fotografiados = set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion)
+    return sum(a["puntos"] * a.get("cantidad", 1) for a in astros if a["nombre"] not in fotografiados)
+
+
+def objetivo_actual():
+    return objetivo_nivel5() if nivel == 5 else OBJETIVOS_POR_NIVEL[nivel]
+
 FOTOS_INICIALES     = 5
 
 # 24 posiciones fijas (6×4) sin solapamiento y sin cubrir HUD
@@ -425,6 +435,9 @@ class FotoReporte(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 
 def crear_astros():
+    global objetivo_nivel5_inicial
+    if nivel == 5:
+        objetivo_nivel5_inicial = objetivo_nivel5()
     astros_nivel = [a for a in astros if a.get("nivel") == nivel]
     total        = sum(a.get("cantidad", 1) for a in astros_nivel)
     ocupadas     = {a.rect.center for a in astros_grupo}
@@ -436,7 +449,7 @@ def crear_astros():
 
 
 def tomar_foto():
-    global flash_activo, flash_tiempo
+    global flash_activo, flash_tiempo, puntos_flotantes
     flash_activo = True
     flash_tiempo = pygame.time.get_ticks()
 
@@ -459,6 +472,7 @@ def tomar_foto():
     camara.sprite.texto_foto         = "PERFECTO" if perfecto else "BIEN"
     camara.sprite.color_texto_foto   = (128, 0, 128) if perfecto else (0, 255, 0)
 
+    puntos_flotantes.append({"puntos": astro.puntos, "centro": astro.rect.center, "tiempo": flash_tiempo})
     album.append({"nombre": astro.nombre, "puntos": astro.puntos})
     astro.kill()
     return astro.puntos
@@ -616,7 +630,7 @@ def mostrar_puntos_partida(pts=None):
     pantalla.blit(texto, texto.get_rect(center=(x + bar_w // 2, y - 20)))
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_w, bar_h), 2, border_radius=10)
 
-    objetivo = OBJETIVOS_POR_NIVEL.get(nivel, 1)
+    objetivo = objetivo_actual()
     if objetivo > 0:
         fill_h = int(bar_h * min(pts / objetivo, 1))
         pygame.draw.rect(pantalla, (255, 215, 0), (x, y + bar_h - fill_h, bar_w, fill_h), border_radius=10)
@@ -1103,7 +1117,7 @@ def _dibujar_instruccion_reporte():
         return
 
     if todas_pegadas:
-        if puntuacion >= OBJETIVOS_POR_NIVEL[nivel]:
+        if puntuacion >= objetivo_actual():
             texto = fuente_normal.render("Avanzar al siguiente nivel", False, (255, 215, 0))
         else:
             texto = fuente_normal.render("Intentar de nuevo", False, (255, 0, 0))
@@ -1402,7 +1416,7 @@ def eventos_jugando(event):
         p = tomar_foto()
         puntuacion             += p
         puntuacion_total_partida += p
-        if puntuacion >= OBJETIVOS_POR_NIVEL[nivel]:
+        if puntuacion >= objetivo_actual():
             tiempo_pausado       = True
             tipo_pausa           = "objetivo"
             tiempo_fotos_agotadas = pygame.time.get_ticks()
@@ -1497,10 +1511,11 @@ def _avanzar_o_reiniciar():
     global fotos, fotos_reporte_instancias, fotos_permanentes_vista
     global album, coleccion, fotos_pegadas_permanentes
     global fotos_tutorial, tipo_pausa, tiempo_inicio_intermision_mejora
+    global puntos_flotantes
     global felicitacion_fotos, felicitacion_puntaje, felicitacion_ticks
     global objetivo_completado, astros_grupo
 
-    if puntuacion >= OBJETIVOS_POR_NIVEL[nivel]:
+    if puntuacion >= objetivo_actual():
         objetivo_completado = True
         if nivel == 5:
             # ¡Juego completo! Mostrar pantalla de felicitación
@@ -1531,6 +1546,7 @@ def _avanzar_o_reiniciar():
     camara.sprite.rect.center = (ANCHO // 2, ALTO // 2)
     fotos_reporte_instancias.clear()
     fotos_permanentes_vista.clear()
+    puntos_flotantes.clear()
     tiempo_inicio_intermision_mejora = pygame.time.get_ticks()
     estado_actual = ESTADO_INTERMISION_MEJORA
 
@@ -1540,18 +1556,21 @@ def _resetear_partida_completa():
     global fotos_reporte_instancias, fotos_permanentes_vista
     global fotos_pegadas_permanentes, album, coleccion
     global nombre_jugador, tipo_pausa, objetivo_completado
+    global puntos_flotantes
 
     fotos_pegadas_permanentes.clear()
     album.clear()
     coleccion.clear()
     fotos_reporte_instancias.clear()
     fotos_permanentes_vista.clear()
+    puntos_flotantes.clear()
     nivel = 1
     puntuacion = puntuacion_total_partida = 0
     fotos = fotos_tutorial = FOTOS_INICIALES
     nombre_jugador = ""
     tipo_pausa = ""
     objetivo_completado = True
+    objetivo_nivel5_inicial = 0
 
 
 # ---------------------------------------------------------------------------
@@ -1570,6 +1589,7 @@ fuente_titulo        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regu
 fuente_media         = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
 fuente_normal        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
 fuente_pequena       = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 20)
+fuente_puntos        = pygame.font.Font("assets/Fonts/Lato/Lato-Thin.ttf", 20)
 
 # Pantalla de carga
 carga = fuente_normal.render("Cargando...", False, (255, 255, 255))
@@ -1646,6 +1666,7 @@ coleccion                = []
 fotos_reporte_instancias  = []
 fotos_permanentes_vista   = []   # instancias FotoReporte para fotos de rondas anteriores
 fotos_pegadas_permanentes = []
+puntos_flotantes          = []  # {"puntos", "centro", "tiempo"}
 
 # Animación de cambio de página (reporte)
 pag_slide_activa      = False
@@ -1660,6 +1681,7 @@ pag_slide_album_captura     = None
 pag_slide_album_solicitada  = 0
 
 PAG_SLIDE_DURACION = 200  # ms
+objetivo_nivel5_inicial = 0  # snapshot del objetivo al comenzar nivel 5
 
 felicitacion_fotos   = 0
 felicitacion_puntaje = 0
@@ -2004,7 +2026,7 @@ while True:
         if tipo_pausa == "objetivo":
             color = (255, 215, 0)
             linea1 = "OBJETIVO COMPLETADO"
-            linea2 = f"{puntuacion} / {OBJETIVOS_POR_NIVEL[nivel]} puntos"
+            linea2 = f"{puntuacion} / {objetivo_nivel5_inicial if nivel == 5 else objetivo_actual()} puntos"
         elif tipo_pausa == "fotos":
             color = (255, 100, 100)
             linea1 = "FOTOS AGOTADAS"
@@ -2049,6 +2071,17 @@ while True:
         for a in astros_grupo:
             a.update_visual(pos_v)
         astros_grupo.draw(pantalla)
+        ahora = pygame.time.get_ticks()
+        puntos_flotantes[:] = [e for e in puntos_flotantes if ahora - e["tiempo"] < 2000]
+        for e in puntos_flotantes:
+            txt = fuente_puntos.render(f"+{e['puntos']}", False, (255, 215, 0))
+            tw, th = txt.get_size()
+            cx, cy = e["centro"]
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    if dx or dy:
+                        pantalla.blit(txt, (cx - tw // 2 + dx, cy - th // 2 + dy))
+            pantalla.blit(txt, (cx - tw // 2, cy - th // 2))
         if estado_actual == ESTADO_JUGANDO:
             camara.draw(pantalla)
         mostrar_flash()
