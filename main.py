@@ -295,11 +295,17 @@ class Camara(pygame.sprite.Sprite):
 
 
 class Astro(pygame.sprite.Sprite):
+    ASTROS_REDUCIDOS = {"CometaHalley", "AgujeroNegro", "Nebulosa", "Galaxia", "Agujero De Gusano"}
+
     def __init__(self, data, posicion):
         super().__init__()
         self.nombre          = data["nombre"]
         self.puntos          = data["puntos"]
         self.image           = assets_astros[self.nombre].copy()
+        if self.nombre in self.ASTROS_REDUCIDOS:
+            w = int(self.image.get_width() * 0.7)
+            h = int(self.image.get_height() * 0.7)
+            self.image = pygame.transform.scale(self.image, (w, h))
         self.rect            = self.image.get_rect(center=posicion)
         self.seleccionado    = False
         self.radio_deteccion = 150
@@ -320,9 +326,10 @@ class Astro(pygame.sprite.Sprite):
 
 
 class FotoReporte(pygame.sprite.Sprite):
-    def __init__(self, clave, texto, rect_miniatura, rect_destino, surf_pixel, surf_real):
+    def __init__(self, clave, texto, rect_miniatura, rect_destino, surf_pixel, surf_real, nombre_mostrar=None):
         super().__init__()
         self.clave          = clave
+        self.nombre_mostrar = nombre_mostrar or clave
         self.texto_astro    = texto
         self.rect_miniatura = rect_miniatura
         self.rect_destino   = rect_destino
@@ -546,7 +553,8 @@ def construir_fotos_album(astros_clave_list):
         foto = FotoReporte(clave, astro_data.get("texto", ""),
                            pygame.Rect(0, 0, 1, 1),
                            posiciones_pagina[pagina][slot],
-                           pixel_img, real_img)
+                           pixel_img, real_img,
+                           nombre_mostrar=astro_data.get("nombre_mostrar", clave))
         foto.pagina = pagina
         foto.pegar(instantaneo=True)
         fotos.append(foto)
@@ -612,13 +620,15 @@ def mostrar_puntos_partida(pts=None):
 
 def dibujar_panel_foto_revelada(pantalla_surf, f):
     """Dibuja el panel de info lateral de una FotoReporte revelada."""
-    nombre_surf = fuente_normal.render(f.clave.upper(), False, (255, 255, 255))
     ancho_max   = 260
+    nombre_lineas = wrap_text(f.nombre_mostrar.upper(), fuente_normal, ancho_max)
+    nombre_surf = [fuente_normal.render(l, False, (255, 255, 255)) for l in nombre_lineas]
     lineas      = wrap_text(f.texto_astro, fuente_pequena, ancho_max)
     textos_surf = [fuente_pequena.render(l, False, (153, 81, 184)) for l in lineas]
 
-    panel_w = max(nombre_surf.get_width(), ancho_max) + 20
-    panel_h = nombre_surf.get_height() + len(textos_surf) * fuente_pequena.get_height() + 20
+    nombre_w = max(s.get_width() for s in nombre_surf)
+    panel_w = max(nombre_w, ancho_max) + 20
+    panel_h = len(nombre_surf) * fuente_normal.get_height() + len(textos_surf) * fuente_pequena.get_height() + 20
     margen  = 10
 
     if f.rect.right + margen + panel_w < ANCHO - margen:
@@ -628,8 +638,11 @@ def dibujar_panel_foto_revelada(pantalla_surf, f):
     panel_y = max(margen, min(f.rect.centery - panel_h // 2, ALTO - margen - panel_h))
 
     pygame.draw.rect(pantalla_surf, (0, 0, 0), (panel_x, panel_y, panel_w, panel_h), border_radius=6)
-    pantalla_surf.blit(nombre_surf, (panel_x + 10, panel_y + 6))
-    y_off = panel_y + 10 + nombre_surf.get_height()
+    y_off = panel_y + 6
+    for s in nombre_surf:
+        pantalla_surf.blit(s, (panel_x + 10, y_off))
+        y_off += fuente_normal.get_height()
+    y_off += 4
     for s in textos_surf:
         pantalla_surf.blit(s, (panel_x + 10, y_off))
         y_off += fuente_pequena.get_height()
@@ -670,8 +683,22 @@ def mostrar_menu():
     label = fuente_media.render("INGRESA TU NOMBRE", False, (255, 255, 255))
     pantalla.blit(label, label.get_rect(center=(ANCHO // 2, ALTO // 2)))
 
-    nombre_surf = fuente_titulo.render(nombre_jugador, False, (150, 50, 200))
-    pantalla.blit(nombre_surf, nombre_surf.get_rect(center=(ANCHO // 2, ALTO // 2 + 70)))
+    # Guiones vacíos debajo del nombre con letras superpuestas
+    MAX_NOMBRE = 10
+    char_w, char_h = fuente_titulo.size("_")
+    gap = 18
+    total_w = MAX_NOMBRE * char_w + (MAX_NOMBRE - 1) * gap
+    start_x = (ANCHO - total_w) // 2
+    center_y = ALTO // 2 + 70
+    pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 150)
+    for i in range(MAX_NOMBRE):
+        x = start_x + i * (char_w + gap)
+        surf_g = fuente_titulo.render("_", False, (150, 50, 200))
+        surf_g.set_alpha(int(80 + 175 * pulse))
+        pantalla.blit(surf_g, (x, center_y - char_h // 2))
+        if i < len(nombre_jugador):
+            surf_l = fuente_titulo.render(nombre_jugador[i], False, (150, 50, 200))
+            pantalla.blit(surf_l, (x, center_y - char_h // 2 - 6))
 
     # "PRESIONE ESPACIO" con pulso de escala
     pulse = 1.0 + 0.04 * math.sin(t * 3.0)
@@ -1023,7 +1050,8 @@ def _inicializar_fotos_reporte(posiciones_pagina, rx, rect_ancho, rect_alto, tam
 
         rect_min  = pygame.Rect(inicio_x + draw_idx * (tamano + espacio), y_foto, tamano, tamano)
         rect_dest = posiciones_pagina[pagina][slot]
-        foto = FotoReporte(clave, astro_data.get("texto", ""), rect_min, rect_dest, pixel_img, real_img)
+        foto = FotoReporte(clave, astro_data.get("texto", ""), rect_min, rect_dest, pixel_img, real_img,
+                           nombre_mostrar=astro_data.get("nombre_mostrar", clave))
         foto.pagina = pagina
         fotos_reporte_instancias.append(foto)
 
@@ -1046,7 +1074,8 @@ def _inicializar_fotos_permanentes(posiciones_pagina):
             continue
         rect_dest = posiciones_pagina[pag][slot_idx]
         foto = FotoReporte(clave, astro_data.get("texto", ""),
-                           pygame.Rect(0, 0, 1, 1), rect_dest, pixel_img, real_img)
+                           pygame.Rect(0, 0, 1, 1), rect_dest, pixel_img, real_img,
+                           nombre_mostrar=astro_data.get("nombre_mostrar", clave))
         foto.pagina = pag
         foto.pegar(instantaneo=True)
         fotos_permanentes_vista.append(foto)
@@ -1230,7 +1259,7 @@ def eventos_menu(event):
     global objetivo_completado
 
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_SPACE:
+        if event.key in (pygame.K_SPACE, pygame.K_RETURN):
             if nombre_jugador and nombre_jugador.lower() not in nombres_existentes:
                 tiempo_inicio_intermision1 = pygame.time.get_ticks()
                 astros_grupo = pygame.sprite.Group()
@@ -1322,9 +1351,11 @@ def eventos_album_puntajes(event):
         for f in fotos_album_puntajes:
             if f.estado == 'revelada' and f.rect.collidepoint(pos):
                 f.pegar(instantaneo=True); return
-        for f in fotos_album_puntajes:
-            if f.estado == 'pegada' and f.rect.collidepoint(pos) and f.pagina == pagina_actual_album:
-                f.revelar_ampliado(); return
+        # Solo una foto despegada a la vez
+        if not any(f.estado == 'revelada' for f in fotos_album_puntajes):
+            for f in fotos_album_puntajes:
+                if f.estado == 'pegada' and f.rect.collidepoint(pos) and f.pagina == pagina_actual_album:
+                    f.revelar_ampliado(); return
         if hay_slide_album:
             return
         # Flechas
