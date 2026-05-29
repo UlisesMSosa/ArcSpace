@@ -786,6 +786,71 @@
             ],
             "fecha_hora": "2026-05-29 20:17:55",
             "cantidad_partidas": 1
+        },
+        "fast": {
+            "puntuacion_total": 18050,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Luna",
+                "Jupiter",
+                "Neptuno",
+                "Galaxia",
+                "Estrella",
+                "Nebulosa",
+                "Estacion",
+                "Marte",
+                "Saturno",
+                "AgujeroNegro",
+                "Mercurio",
+                "Ovni"
+            ],
+            "fecha_hora": "2026-05-29 20:31:58",
+            "cantidad_partidas": 1
+        },
+        "asdadas": {
+            "puntuacion_total": 17150,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Neptuno",
+                "Estrella",
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Saturno",
+                "Ovni",
+                "Mercurio",
+                "Galaxia",
+                "Urano",
+                "Venus"
+            ],
+            "fecha_hora": "2026-05-29 20:37:13",
+            "cantidad_partidas": 1
+        },
+        "asdasds": {
+            "puntuacion_total": 20300,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Nebulosa",
+                "Mercurio",
+                "Saturno",
+                "Estacion",
+                "Estrella",
+                "Agujero De Gusano",
+                "Urano",
+                "Jupiter",
+                "Venus",
+                "Luna",
+                "Galaxia",
+                "Ovni",
+                "CometaHalley",
+                "Marte",
+                "Neptuno"
+            ],
+            "fecha_hora": "2026-05-29 20:40:43",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -1643,9 +1708,78 @@
                 "Estrella"
             ],
             "fecha_hora": "2026-05-29 20:17:55"
+        },
+        {
+            "nombre": "fast",
+            "puntuacion_total": 18050,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Luna",
+                "Jupiter",
+                "Neptuno",
+                "Galaxia",
+                "Estrella",
+                "Nebulosa",
+                "Estacion",
+                "Marte",
+                "Saturno",
+                "AgujeroNegro",
+                "Mercurio",
+                "Ovni"
+            ],
+            "fecha_hora": "2026-05-29 20:31:58"
+        },
+        {
+            "nombre": "asdadas",
+            "puntuacion_total": 17150,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Neptuno",
+                "Estrella",
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Saturno",
+                "Ovni",
+                "Mercurio",
+                "Galaxia",
+                "Urano",
+                "Venus"
+            ],
+            "fecha_hora": "2026-05-29 20:37:13"
+        },
+        {
+            "nombre": "asdasds",
+            "puntuacion_total": 20300,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Nebulosa",
+                "Mercurio",
+                "Saturno",
+                "Estacion",
+                "Estrella",
+                "Agujero De Gusano",
+                "Urano",
+                "Jupiter",
+                "Venus",
+                "Luna",
+                "Galaxia",
+                "Ovni",
+                "CometaHalley",
+                "Marte",
+                "Neptuno"
+            ],
+            "fecha_hora": "2026-05-29 20:40:43"
         }
     ],
     "top_scores": [
+        {
+            "nombre": "asdasds",
+            "puntos": 20300
+        },
         {
             "nombre": "obj",
             "puntos": 19000
@@ -1663,6 +1797,10 @@
             "puntos": 18050
         },
         {
+            "nombre": "fast",
+            "puntos": 18050
+        },
+        {
             "nombre": "test5",
             "puntos": 18000
         },
@@ -1673,6 +1811,10 @@
         {
             "nombre": "sadaheh",
             "puntos": 17200
+        },
+        {
+            "nombre": "asdadas",
+            "puntos": 17150
         },
         {
             "nombre": "uli",

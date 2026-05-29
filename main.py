@@ -99,7 +99,12 @@ def render_gradiente_texto(fuente, texto, color1, color2):
 
 
 def cargar_imagen(ruta, escala=None):
-    img = pygame.image.load(ruta).convert_alpha()
+    img = pygame.image.load(ruta)
+    try:
+        has_alpha = img.get_flags() & pygame.SRCALPHA
+    except AttributeError:
+        has_alpha = False
+    img = img.convert_alpha() if has_alpha else img.convert()
     if escala:
         img = pygame.transform.scale(img, escala)
     return img
@@ -546,7 +551,13 @@ def cargar_assets_reales():
             continue
         for ext in ("png", "jpeg"):
             try:
-                assets_reales[nombre] = cargar_imagen(f"assets/Graphics/Reales/{archivo}.{ext}")
+                img = cargar_imagen(f"assets/Graphics/Reales/{archivo}.{ext}")
+                w, h = img.get_size()
+                max_lado = 800
+                if w > max_lado or h > max_lado:
+                    sc = max_lado / max(w, h)
+                    img = pygame.transform.smoothscale(img, (int(w * sc), int(h * sc)))
+                assets_reales[nombre] = img
                 break
             except FileNotFoundError:
                 pass
@@ -630,7 +641,7 @@ def mostrar_puntos_partida(pts=None):
     pantalla.blit(texto, texto.get_rect(center=(x + bar_w // 2, y - 20)))
     pygame.draw.rect(pantalla, (64, 64, 64), (x, y, bar_w, bar_h), 2, border_radius=10)
 
-    objetivo = objetivo_actual()
+    objetivo = objetivo_nivel5_inicial if nivel == 5 else objetivo_actual()
     if objetivo > 0:
         fill_h = int(bar_h * min(pts / objetivo, 1))
         pygame.draw.rect(pantalla, (255, 215, 0), (x, y + bar_h - fill_h, bar_w, fill_h), border_radius=10)
@@ -669,12 +680,10 @@ def dibujar_panel_foto_revelada(pantalla_surf, f):
 
 
 def dibujar_flechas_album(pantalla_surf, pagina_actual, total_paginas):
-    fi = pygame.transform.scale(img_left,  (TAM_FLECHA, TAM_FLECHA))
-    fd = pygame.transform.scale(img_right, (TAM_FLECHA, TAM_FLECHA))
     if pagina_actual > 0:
-        pantalla_surf.blit(fi, (FLECHA_IZQ_X, FLECHA_Y))
+        pantalla_surf.blit(img_arrow_l, (FLECHA_IZQ_X, FLECHA_Y))
     if pagina_actual < total_paginas - 1:
-        pantalla_surf.blit(fd, (FLECHA_DER_X, FLECHA_Y))
+        pantalla_surf.blit(img_arrow_r, (FLECHA_DER_X, FLECHA_Y))
 
 
 def dibujar_slots_album(pantalla_surf, slots, offset_pagina=0):
@@ -964,7 +973,7 @@ def mostrar_reporte():
     txt_m = fuente_pequena.render("Volver al menu", False, (255, 255, 255))
     r_m   = txt_m.get_rect(left=20, centery=ALTO - 30)
     pantalla.blit(txt_m, r_m)
-    m_img = pygame.transform.scale(img_m, (30, 30))
+    m_img = img_m_icon
     pantalla.blit(m_img, m_img.get_rect(left=r_m.right + 10, centery=ALTO - 30))
 
     # --- Overlay de animación de página ---
@@ -1033,9 +1042,11 @@ def _dibujar_cabecera_reporte(posiciones_pagina):
         pygame.draw.rect(pantalla, (0, 0, 0),       (px - 6, y_foto - 6, tamano + 12, tamano + 12), 3, border_radius=2)
         img = assets_astros.get(clave)
         if img:
-            iw, ih = img.get_size()
-            sc = min(tamano / iw, tamano / ih)
-            img_sc = pygame.transform.smoothscale(img, (int(iw * sc), int(ih * sc)))
+            if clave not in _thumb_cache:
+                iw, ih = img.get_size()
+                sc = min(tamano / iw, tamano / ih)
+                _thumb_cache[clave] = pygame.transform.smoothscale(img, (int(iw * sc), int(ih * sc)))
+            img_sc = _thumb_cache[clave]
             pantalla.blit(img_sc, (px + (tamano - img_sc.get_width()) // 2,
                                    y_foto + (tamano - img_sc.get_height()) // 2))
 
@@ -1117,11 +1128,11 @@ def _dibujar_instruccion_reporte():
         return
 
     if todas_pegadas:
-        if puntuacion >= objetivo_actual():
+        if (nivel == 5 and objetivo_actual() <= 0) or (nivel != 5 and puntuacion >= objetivo_actual()):
             texto = fuente_normal.render("Avanzar al siguiente nivel", False, (255, 215, 0))
         else:
             texto = fuente_normal.render("Intentar de nuevo", False, (255, 0, 0))
-        img_sp = pygame.transform.scale(img_space, (96, 42))
+        img_sp = img_space_inst
         total_w  = texto.get_width() + 8 + img_sp.get_width()
         start_x  = (ANCHO - total_w) // 2
         pantalla.blit(texto, texto.get_rect(left=start_x, centery=140))
@@ -1139,7 +1150,7 @@ def _dibujar_instruccion_reporte():
 def _blit_con_icono_mouse(texto):
     r = texto.get_rect(center=(ANCHO // 2, 140))
     pantalla.blit(texto, r)
-    icono = pygame.transform.scale(img_mouse_left, (30, 38))
+    icono = img_mouse_icon
     pantalla.blit(icono, icono.get_rect(midright=(r.left - 10, r.centery)))
 
 
@@ -1416,7 +1427,7 @@ def eventos_jugando(event):
         p = tomar_foto()
         puntuacion             += p
         puntuacion_total_partida += p
-        if puntuacion >= objetivo_actual():
+        if (nivel == 5 and objetivo_actual() <= 0) or (nivel != 5 and puntuacion >= objetivo_actual()):
             tiempo_pausado       = True
             tipo_pausa           = "objetivo"
             tiempo_fotos_agotadas = pygame.time.get_ticks()
@@ -1515,7 +1526,7 @@ def _avanzar_o_reiniciar():
     global felicitacion_fotos, felicitacion_puntaje, felicitacion_ticks
     global objetivo_completado, astros_grupo
 
-    if puntuacion >= objetivo_actual():
+    if (nivel == 5 and objetivo_actual() <= 0) or (nivel != 5 and puntuacion >= objetivo_actual()):
         objetivo_completado = True
         if nivel == 5:
             # ¡Juego completo! Mostrar pantalla de felicitación
@@ -1601,19 +1612,26 @@ pygame.event.pump()
 # Assets
 # ---------------------------------------------------------------------------
 
-img_camara   = cargar_imagen("assets/Graphics/Camara.png", (60, 60))
-fondo        = cargar_imagen("assets/Graphics/fondo.png", (ANCHO, ALTO))
-img_up       = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_up.png")
-img_down     = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_down.png")
-img_left     = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_left.png")
-img_right    = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_right.png")
-img_m        = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_m.png")
-img_mouse_left = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/mouse_left.png")
-img_uibook   = cargar_imagen("assets/Graphics/UIBook.png", (830, 500))
-img_nacional = escalar_proporcional(cargar_imagen("assets/Graphics/Nacional.png"), 32, 32)
+img_camara       = cargar_imagen("assets/Graphics/Camara.png", (60, 60))
+fondo            = cargar_imagen("assets/Graphics/fondo.png", (ANCHO, ALTO))
+img_up           = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_up.png")
+img_down         = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_down.png")
+img_left         = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_left.png")
+img_right        = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_right.png")
+img_m            = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_m.png")
+img_mouse_left   = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/mouse_left.png")
+img_uibook       = cargar_imagen("assets/Graphics/UIBook.png", (830, 500))
+img_nacional     = escalar_proporcional(cargar_imagen("assets/Graphics/Nacional.png"), 32, 32)
 
-_space_raw   = cargar_imagen("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png")
-img_space    = _space_raw.subsurface((0, 36, 128, 56)).copy()
+_space_raw       = cargar_imagen("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png")
+img_space        = _space_raw.subsurface((0, 36, 128, 56)).copy()
+
+img_arrow_l      = pygame.transform.scale(img_left, (50, 50))
+img_arrow_r      = pygame.transform.scale(img_right, (50, 50))
+img_m_icon       = pygame.transform.scale(img_m, (30, 30))
+img_mouse_icon   = pygame.transform.scale(img_mouse_left, (30, 38))
+img_space_inst   = pygame.transform.scale(img_space, (96, 42))
+img_camara_icon  = pygame.transform.scale(img_camara, (50, 50))
 
 datos_teclas = [
     {"img": img_up,    "offset": (0, -50)},
@@ -1641,6 +1659,7 @@ assets_astros = {
     "Ovni":            cargar_imagen("assets/Graphics/Astros/Ovni.png",         (140, 140)),
 }
 assets_reales = {}
+_thumb_cache = {}  # clave -> surface escalada a 80×80 (proporcional)
 
 # Datos
 astros = []
@@ -1759,8 +1778,12 @@ def mostrar_felicitacion():
 
     # --- Título con gradiente y flotación ---
     float_y = int(ALTO // 6 + math.sin(t * 1.2) * 8)
-    titulo = render_gradiente_texto(fuente_titulo_grande, "¡FELICIDADES!", (255, 215, 0), (200, 80, 255))
-    # Añadir halo brillante bajo el título
+    if not hasattr(mostrar_felicitacion, '_titulo'):
+        mostrar_felicitacion._titulo = render_gradiente_texto(
+            fuente_titulo_grande, "¡FELICIDADES!", (255, 215, 0), (200, 80, 255))
+        mostrar_felicitacion._sub = fuente_media.render("Completaste el album", False, (255, 255, 255))
+    titulo = mostrar_felicitacion._titulo
+    # Halo con alpha variable (se crea cada frame, un solo ellipse es barato)
     halo_a = int(60 + 40 * math.sin(t * 2))
     halo = pygame.Surface((titulo.get_width() + 60, titulo.get_height() + 30), pygame.SRCALPHA)
     pygame.draw.ellipse(halo, (255, 215, 0, halo_a), halo.get_rect())
@@ -1768,21 +1791,24 @@ def mostrar_felicitacion():
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, float_y)))
 
     # --- Subtítulo ---
-    sub = fuente_media.render("¡Completaste los 5 niveles!", False, (255, 255, 255))
+    sub = mostrar_felicitacion._sub
     pantalla.blit(sub, sub.get_rect(center=(ANCHO // 2, float_y + 90)))
 
     # --- Panel central de estadísticas ---
-    panel_w, panel_h = 600, 200
+    if not hasattr(mostrar_felicitacion, '_panel'):
+        mostrar_felicitacion._panel_w, mostrar_felicitacion._panel_h = 760, 200
+        panel_surf = pygame.Surface((mostrar_felicitacion._panel_w, mostrar_felicitacion._panel_h), pygame.SRCALPHA)
+        for px_ in range(mostrar_felicitacion._panel_w):
+            gt = px_ / max(mostrar_felicitacion._panel_w - 1, 1)
+            pr = int(40 + gt * 60)
+            pg = int(0)
+            pb = int(80 + gt * 80)
+            pygame.draw.line(panel_surf, (pr, pg, pb, 210), (px_, 0), (px_, mostrar_felicitacion._panel_h))
+        mostrar_felicitacion._panel = panel_surf
+    panel_w, panel_h = mostrar_felicitacion._panel_w, mostrar_felicitacion._panel_h
     panel_x = (ANCHO - panel_w) // 2
     panel_y = ALTO // 2 - 60
-    panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
-    # Gradiente del panel
-    for px_ in range(panel_w):
-        gt = px_ / max(panel_w - 1, 1)
-        pr = int(40 + gt * 60)
-        pg = int(0)
-        pb = int(80 + gt * 80)
-        pygame.draw.line(panel_surf, (pr, pg, pb, 210), (px_, 0), (px_, panel_h))
+    panel_surf = mostrar_felicitacion._panel.copy()
     pulse_b = 0.5 + 0.5 * math.sin(t * 2.5)
     ba = int(160 + 80 * pulse_b)
     pygame.draw.rect(panel_surf, (255, 215, 0, ba), (0, 0, panel_w, panel_h), 3, border_radius=20)
@@ -1790,12 +1816,12 @@ def mostrar_felicitacion():
     pantalla.blit(panel_surf, (panel_x, panel_y))
 
     # Ícono cámara + fotos tomadas
-    cam_icon = pygame.transform.scale(img_camara, (50, 50))
-    pantalla.blit(cam_icon, (panel_x + 40, panel_y + panel_h // 2 - 50))
+    cam_icon = img_camara_icon
+    pantalla.blit(cam_icon, (panel_x + 70, panel_y + panel_h // 2 - 50))
     lbl_fotos = fuente_normal.render("FOTOS", False, (200, 200, 255))
     val_fotos = fuente_titulo.render(str(felicitacion_fotos), False, (255, 215, 0))
-    pantalla.blit(lbl_fotos, (panel_x + 105, panel_y + 30))
-    pantalla.blit(val_fotos, (panel_x + 105, panel_y + 65))
+    pantalla.blit(lbl_fotos, (panel_x + 140, panel_y + 30))
+    pantalla.blit(val_fotos, (panel_x + 140, panel_y + 65))
 
     # Separador vertical
     pygame.draw.line(pantalla, (255, 215, 0, 120),
@@ -1803,7 +1829,7 @@ def mostrar_felicitacion():
                      (panel_x + panel_w // 2, panel_y + panel_h - 20), 2)
 
     # Estrella + puntaje (dibujada con polígonos: la fuente Silkscreen no incluye ★)
-    cx_star = panel_x + panel_w // 2 + 45
+    cx_star = panel_x + panel_w // 2 + 70
     cy_star = panel_y + panel_h // 2 - 25
     star_size = 28
     puntos_estrella = []
@@ -1814,8 +1840,8 @@ def mostrar_felicitacion():
     pygame.draw.polygon(pantalla, (255, 215, 0), puntos_estrella)
     lbl_pts = fuente_normal.render("PUNTAJE", False, (200, 200, 255))
     val_pts = fuente_titulo.render(str(felicitacion_puntaje), False, (255, 215, 0))
-    pantalla.blit(lbl_pts, (panel_x + panel_w // 2 + 80, panel_y + 30))
-    pantalla.blit(val_pts, (panel_x + panel_w // 2 + 80, panel_y + 65))
+    pantalla.blit(lbl_pts, (panel_x + panel_w // 2 + 110, panel_y + 30))
+    pantalla.blit(val_pts, (panel_x + panel_w // 2 + 110, panel_y + 65))
 
     # --- Botones ---
     btn_y = panel_y + panel_h + 60
