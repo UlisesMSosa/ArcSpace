@@ -343,9 +343,10 @@ class FotoReporte(pygame.sprite.Sprite):
         self.rect  = self.image.get_rect(center=rect_miniatura.center)
 
     def update(self):
-        if self.estado != 'girando':
-            return
-        self._animar_giro()
+        if self.estado == 'girando':
+            self._animar_giro()
+        elif self.estado == 'pegando':
+            self._animar_pegado()
 
     def _animar_giro(self):
         self.velocidad_angular = min(getattr(self, 'velocidad_angular', 0.02) + 0.003, 0.3)
@@ -365,10 +366,42 @@ class FotoReporte(pygame.sprite.Sprite):
             self.rect  = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
             self.estado = 'revelada'
 
-    def pegar(self):
-        self.image  = escalar_rellenar(self.superficie_real, *self.tamanio_relleno)
-        self.rect   = self.image.get_rect(center=self.rect_destino.center)
-        self.estado = 'pegada'
+    def pegar(self, instantaneo=False):
+        if instantaneo:
+            self.image  = escalar_rellenar(self.superficie_real, *self.tamanio_relleno)
+            self.rect   = self.image.get_rect(center=self.rect_destino.center)
+            self.estado = 'pegada'
+            return
+        self._pegando_inicio      = pygame.time.get_ticks()
+        self._pegando_duracion    = 500
+        self._pegando_start_center = (ANCHO // 2, ALTO // 2)
+        self._pegando_end_center   = self.rect_destino.center
+        self._pegando_start_size   = self.tamanio_anim
+        self._pegando_end_size     = self.tamanio_relleno
+        self.estado = 'pegando'
+
+    def _animar_pegado(self):
+        elapsed = pygame.time.get_ticks() - self._pegando_inicio
+        t = min(elapsed / self._pegando_duracion, 1.0)
+
+        ease = 1 - (1 - t) ** 3
+        if t > 0.8:
+            bt = (t - 0.8) / 0.2
+            ease += 0.08 * math.sin(bt * math.pi * 3) * (1 - bt)
+        ease = min(ease, 1.0)
+
+        cx = self._pegando_start_center[0] + (self._pegando_end_center[0] - self._pegando_start_center[0]) * ease
+        cy = self._pegando_start_center[1] + (self._pegando_end_center[1] - self._pegando_start_center[1]) * ease
+        w  = max(int(self._pegando_start_size[0] + (self._pegando_end_size[0] - self._pegando_start_size[0]) * ease), 1)
+        h  = max(int(self._pegando_start_size[1] + (self._pegando_end_size[1] - self._pegando_start_size[1]) * ease), 1)
+
+        if t >= 1.0:
+            self.image  = escalar_rellenar(self.superficie_real, *self.tamanio_relleno)
+            self.rect   = self.image.get_rect(center=self._pegando_end_center)
+            self.estado = 'pegada'
+        else:
+            self.image = pygame.transform.scale(self.superficie_real, (w, h))
+            self.rect  = self.image.get_rect(center=(int(cx), int(cy)))
 
     def revelar_ampliado(self):
         self.image  = pygame.transform.scale(self.superficie_real, self.tamanio_anim)
@@ -515,7 +548,7 @@ def construir_fotos_album(astros_clave_list):
                            posiciones_pagina[pagina][slot],
                            pixel_img, real_img)
         foto.pagina = pagina
-        foto.pegar()
+        foto.pegar(instantaneo=True)
         fotos.append(foto)
     return fotos
 
@@ -708,15 +741,38 @@ def mostrar_puntajes():
 
 
 def mostrar_album_puntajes():
-    global boton_volver_rect, pagina_actual_album
-    titulo = fuente_titulo.render(f"Album de {album_puntajes_clave}", False, (255, 215, 0))
-    pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 110)))
-    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 40, ANCHO - 20)
+    global boton_volver_rect, pagina_actual_album, pag_slide_album_activa
+    global pag_slide_album_inicio, pag_slide_album_captura, pag_slide_album_solicitada
 
     posiciones_pagina = calcular_posiciones_pagina(astros)
     total_paginas     = len(posiciones_pagina)
+
+    # --- Iniciar animación de página si se solicitó ---
+    if pag_slide_album_solicitada != 0 and not pag_slide_album_activa:
+        old_page = pagina_actual_album
+        pagina_actual_album += pag_slide_album_solicitada
+        if pagina_actual_album < 0 or pagina_actual_album >= total_paginas:
+            pagina_actual_album = max(0, min(total_paginas - 1, pagina_actual_album))
+            pag_slide_album_solicitada = 0
+        else:
+            cap = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+            cap.blit(img_uibook, img_uibook.get_rect(center=(ANCHO // 2, 420)))
+            dibujar_slots_album(cap, posiciones_pagina[old_page], old_page)
+            for f in fotos_album_puntajes:
+                if f.estado == 'pegada' and f.pagina == old_page:
+                    cap.blit(f.image, f.rect)
+            dibujar_flechas_album(cap, old_page, total_paginas)
+            pag_slide_album_captura = cap
+            pag_slide_album_inicio = pygame.time.get_ticks()
+            pag_slide_album_activa = True
+            pag_slide_album_solicitada = 0
+
     if pagina_actual_album >= total_paginas:
         pagina_actual_album = 0
+
+    titulo = fuente_titulo.render(f"Album de {album_puntajes_clave}", False, (255, 215, 0))
+    pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 110)))
+    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 40, ANCHO - 20)
 
     img_uibook_rect = img_uibook.get_rect(center=(ANCHO // 2, 420))
     pantalla.blit(img_uibook, img_uibook_rect)
@@ -738,17 +794,56 @@ def mostrar_album_puntajes():
 
     dibujar_flechas_album(pantalla, pagina_actual_album, total_paginas)
 
+    # --- Overlay de animación de página ---
+    if pag_slide_album_activa and pag_slide_album_captura is not None:
+        elapsed = pygame.time.get_ticks() - pag_slide_album_inicio
+        t = min(elapsed / PAG_SLIDE_DURACION, 1.0)
+        if t >= 1.0:
+            pag_slide_album_activa = False
+            pag_slide_album_captura = None
+        else:
+            alpha = int(255 * (1 - t * t))
+            pag_slide_album_captura.set_alpha(alpha)
+            pantalla.blit(pag_slide_album_captura, (0, 0))
+
 
 # ---------------------------------------------------------------------------
 # Pantallas: reporte post-ronda
 # ---------------------------------------------------------------------------
 
 def mostrar_reporte():
-    global nivel, pagina_actual
+    global nivel, pagina_actual, pag_slide_activa, pag_slide_inicio
+    global pag_slide_captura, pag_slide_solicitada
     cargar_assets_reales()
 
     posiciones_pagina = calcular_posiciones_pagina(astros)
-    if pagina_actual >= len(posiciones_pagina):
+    total_pags = len(posiciones_pagina)
+
+    # --- Iniciar animación de página si se solicitó ---
+    if pag_slide_solicitada != 0 and not pag_slide_activa:
+        old_page = pagina_actual
+        pagina_actual += pag_slide_solicitada
+        if pagina_actual < 0 or pagina_actual >= total_pags:
+            pagina_actual = max(0, min(total_pags - 1, pagina_actual))
+            pag_slide_solicitada = 0
+        else:
+            cap = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+            cap.blit(img_uibook, img_uibook.get_rect(center=(ANCHO // 2, 420)))
+            dibujar_slots_album(cap, posiciones_pagina[old_page], old_page)
+            for f in fotos_permanentes_vista:
+                if f.estado == 'pegada' and f.pagina == old_page:
+                    cap.blit(f.image, f.rect)
+            claves_perm = {f.clave for f in fotos_permanentes_vista}
+            for f in fotos_reporte_instancias:
+                if f.estado == 'pegada' and f.pagina == old_page and f.clave not in claves_perm:
+                    cap.blit(f.image, f.rect)
+            dibujar_flechas_album(cap, old_page, total_pags)
+            pag_slide_captura = cap
+            pag_slide_inicio = pygame.time.get_ticks()
+            pag_slide_activa = True
+            pag_slide_solicitada = 0
+
+    if pagina_actual >= total_pags:
         pagina_actual = 0
     slots = posiciones_pagina[pagina_actual]
 
@@ -776,9 +871,9 @@ def mostrar_reporte():
         if f.estado == 'pegada' and f.pagina == pagina_actual and f.clave not in claves_permanentes:
             pantalla.blit(f.image, f.rect)
 
-    # Animaciones (girando encima de todo)
+    # Animaciones (girando / pegando encima de todo)
     for f in fotos_reporte_instancias:
-        if f.estado == 'girando':
+        if f.estado in ('girando', 'pegando'):
             f.update()
             pantalla.blit(f.image, f.rect)
 
@@ -818,6 +913,18 @@ def mostrar_reporte():
     pantalla.blit(txt_m, r_m)
     m_img = pygame.transform.scale(img_m, (30, 30))
     pantalla.blit(m_img, m_img.get_rect(left=r_m.right + 10, centery=ALTO - 30))
+
+    # --- Overlay de animación de página ---
+    if pag_slide_activa and pag_slide_captura is not None:
+        elapsed = pygame.time.get_ticks() - pag_slide_inicio
+        t = min(elapsed / PAG_SLIDE_DURACION, 1.0)
+        if t >= 1.0:
+            pag_slide_activa = False
+            pag_slide_captura = None
+        else:
+            alpha = int(255 * (1 - t * t))
+            pag_slide_captura.set_alpha(alpha)
+            pantalla.blit(pag_slide_captura, (0, 0))
 
 
 def _dibujar_cabecera_reporte(posiciones_pagina):
@@ -941,7 +1048,7 @@ def _inicializar_fotos_permanentes(posiciones_pagina):
         foto = FotoReporte(clave, astro_data.get("texto", ""),
                            pygame.Rect(0, 0, 1, 1), rect_dest, pixel_img, real_img)
         foto.pagina = pag
-        foto.pegar()
+        foto.pegar(instantaneo=True)
         fotos_permanentes_vista.append(foto)
 
 
@@ -949,8 +1056,9 @@ def _dibujar_instruccion_reporte():
     todas_pegadas = all(f.estado == 'pegada' for f in fotos_reporte_instancias)
     hay_revelada  = any(f.estado == 'revelada' for f in fotos_reporte_instancias)
     hay_girando   = any(f.estado == 'girando'  for f in fotos_reporte_instancias)
+    hay_pegando   = any(f.estado == 'pegando'  for f in fotos_reporte_instancias)
 
-    if hay_girando:
+    if hay_girando or hay_pegando:
         return
 
     if todas_pegadas:
@@ -1175,22 +1283,36 @@ def eventos_puntajes(event):
                 album_puntajes_clave  = entry["nombre"]
                 pagina_actual_album   = 0
                 fotos_album_puntajes  = construir_fotos_album(entry["datos"]["astros_descubiertos"])
+                pag_slide_album_activa = False
+                pag_slide_album_solicitada = 0
+                pag_slide_album_captura = None
                 estado_actual         = ESTADO_ALBUM_PUNTAJES
                 break
 
 
 def eventos_album_puntajes(event):
-    global estado_actual, pagina_actual_album
+    global estado_actual, pagina_actual_album, pag_slide_album_solicitada, pag_slide_album_activa
+
+    hay_slide_album = pag_slide_album_activa or pag_slide_album_solicitada != 0
 
     if event.type == pygame.KEYDOWN:
         if event.key in (pygame.K_m, pygame.K_ESCAPE):
             estado_actual = ESTADO_PUNTAJES
-        elif event.key == pygame.K_LEFT:
-            pagina_actual_album = max(0, pagina_actual_album - 1)
-        elif event.key == pygame.K_RIGHT:
-            pagina_actual_album += 1
+        elif event.key == pygame.K_LEFT and not hay_slide_album:
+            posiciones_pagina = calcular_posiciones_pagina(astros)
+            if _solicitar_slide_pagina(-1, len(posiciones_pagina), pag_slide_album_solicitada, pagina_actual_album):
+                pag_slide_album_solicitada = -1
+        elif event.key == pygame.K_RIGHT and not hay_slide_album:
+            posiciones_pagina = calcular_posiciones_pagina(astros)
+            if _solicitar_slide_pagina(1, len(posiciones_pagina), pag_slide_album_solicitada, pagina_actual_album):
+                pag_slide_album_solicitada = 1
     if event.type == pygame.MOUSEWHEEL:
-        pagina_actual_album = max(0, pagina_actual_album + (-1 if event.y > 0 else 1))
+        if not hay_slide_album:
+            posiciones_pagina = calcular_posiciones_pagina(astros)
+            total = len(posiciones_pagina)
+            direccion = -1 if event.y > 0 else 1
+            if _solicitar_slide_pagina(direccion, total, pag_slide_album_solicitada, pagina_actual_album):
+                pag_slide_album_solicitada = direccion
     if event.type == pygame.MOUSEBUTTONDOWN:
         if boton_volver_rect.collidepoint(event.pos):
             estado_actual = ESTADO_PUNTAJES
@@ -1199,16 +1321,18 @@ def eventos_album_puntajes(event):
         # Revelar / pegar fotos
         for f in fotos_album_puntajes:
             if f.estado == 'revelada' and f.rect.collidepoint(pos):
-                f.pegar(); return
+                f.pegar(instantaneo=True); return
         for f in fotos_album_puntajes:
             if f.estado == 'pegada' and f.rect.collidepoint(pos) and f.pagina == pagina_actual_album:
                 f.revelar_ampliado(); return
+        if hay_slide_album:
+            return
         # Flechas
         if pagina_actual_album > 0:
             if pygame.Rect(FLECHA_IZQ_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-                pagina_actual_album -= 1; return
+                pag_slide_album_solicitada = -1; return
         if pygame.Rect(FLECHA_DER_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-            pagina_actual_album += 1
+            pag_slide_album_solicitada = 1
     if event.type == pygame.MOUSEMOTION:
         for f in fotos_album_puntajes:
             f.hover = f.estado == 'revelada' and f.rect.collidepoint(event.pos)
@@ -1234,15 +1358,27 @@ def eventos_jugando(event):
             tiempo_fotos_agotadas = pygame.time.get_ticks()
 
 
+def _solicitar_slide_pagina(direccion, total_pags, slide_solicitada, pagina_actual_val):
+    """Helper: solicita una animación de cambio de página si es válida."""
+    if slide_solicitada != 0:
+        return False
+    nueva = pagina_actual_val + direccion
+    if nueva < 0 or nueva >= total_pags:
+        return False
+    return True
+
+
 def eventos_reporte(event):
     global estado_actual, nivel, puntuacion, puntuacion_total_partida
     global fotos, fotos_reporte_instancias, fotos_pegadas_permanentes
     global album, coleccion, nombre_jugador, pagina_actual
     global tiempo_inicio_intermision_mejora, tipo_pausa, fotos_tutorial
+    global pag_slide_solicitada, pag_slide_activa
 
     todas_pegadas = all(f.estado == 'pegada' for f in fotos_reporte_instancias)
     todas_fotos = fotos_reporte_instancias + fotos_permanentes_vista
-    hay_transicion = any(f.estado in ('girando', 'revelada') for f in todas_fotos)
+    hay_transicion = any(f.estado in ('girando', 'revelada', 'pegando') for f in todas_fotos)
+    hay_slide = pag_slide_activa or pag_slide_solicitada != 0
 
     if event.type == pygame.MOUSEMOTION:
         for f in todas_fotos:
@@ -1264,7 +1400,7 @@ def eventos_reporte(event):
                 return
 
         # Bloquear todo mientras hay animación en curso
-        if hay_transicion:
+        if hay_transicion or hay_slide:
             return
 
         pos = event.pos
@@ -1276,15 +1412,15 @@ def eventos_reporte(event):
 
         # Flechas de página
         total_paginas = len(calcular_posiciones_pagina(astros))
-        if pagina_actual > 0:
+        if _solicitar_slide_pagina(-1, total_paginas, pag_slide_solicitada, pagina_actual):
             if pygame.Rect(FLECHA_IZQ_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-                pagina_actual -= 1; return
-        if pagina_actual < total_paginas - 1:
+                pag_slide_solicitada = -1; return
+        if _solicitar_slide_pagina(1, total_paginas, pag_slide_solicitada, pagina_actual):
             if pygame.Rect(FLECHA_DER_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-                pagina_actual += 1
+                pag_slide_solicitada = 1
 
     if event.type == pygame.KEYDOWN:
-        if hay_transicion:
+        if hay_transicion or hay_slide:
             return  # Bloquear teclado mientras hay animación
 
         if event.key == pygame.K_SPACE:
@@ -1455,6 +1591,20 @@ coleccion                = []
 fotos_reporte_instancias  = []
 fotos_permanentes_vista   = []   # instancias FotoReporte para fotos de rondas anteriores
 fotos_pegadas_permanentes = []
+
+# Animación de cambio de página (reporte)
+pag_slide_activa      = False
+pag_slide_inicio      = 0
+pag_slide_captura     = None
+pag_slide_solicitada  = 0   # -1 izquierda, 1 derecha
+
+# Animación de cambio de página (album_puntajes)
+pag_slide_album_activa      = False
+pag_slide_album_inicio      = 0
+pag_slide_album_captura     = None
+pag_slide_album_solicitada  = 0
+
+PAG_SLIDE_DURACION = 200  # ms
 
 felicitacion_fotos   = 0
 felicitacion_puntaje = 0
@@ -1815,6 +1965,9 @@ while True:
             fotos_reporte_instancias.clear()
             pagina_actual = 0
             fotos = FOTOS_INICIALES
+            pag_slide_activa = False
+            pag_slide_solicitada = 0
+            pag_slide_captura = None
             estado_actual = ESTADO_REPORTE
 
     elif estado_actual == ESTADO_JUGANDO:

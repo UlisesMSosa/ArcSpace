@@ -15,6 +15,6 @@
         {"nombre": "Nebulosa", "puntos": 1000, "texto": "Cunas estelares hechas de inmensas nubes de gas", "cantidad": 1, "nivel": 4, "real": "Nebulosa-Real", "posicion": 12},
         {"nombre": "Galaxia", "puntos": 1200, "texto": "Una enorme familia de miles de millones de estrellas", "cantidad": 1, "nivel": 4, "real": "Galaxia-Real", "posicion": 13},
         {"nombre": "Agujero De Gusano", "puntos": 1400, "texto": "Un tunel en el espacio-tiempo que conecta lugares lejanos", "cantidad": 1, "nivel": 4, "real": "Gusano-Real", "posicion": 14},
-        {"nombre": "Ovni", "puntos": 4000, "texto": "Un misterioso objeto de origen desconocido", "cantidad": 1, "nivel": 5, "real": "Ovni-Real", "posicion": 15}
+        {"nombre": "Ovni", "puntos": 5000, "texto": "Un misterioso objeto de origen desconocido", "cantidad": 1, "nivel": 5, "real": "Ovni-Real", "posicion": 15}
     ]
 }

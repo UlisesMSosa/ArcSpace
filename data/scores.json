@@ -573,6 +573,71 @@
             ],
             "fecha_hora": "2026-05-27 19:37:18",
             "cantidad_partidas": 2
+        },
+        "uli": {
+            "puntuacion_total": 17000,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Neptuno",
+                "Venus",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Ovni",
+                "CometaHalley",
+                "Jupiter",
+                "AgujeroNegro",
+                "Saturno",
+                "Estacion",
+                "Galaxia",
+                "Urano",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-29 18:55:51",
+            "cantidad_partidas": 1
+        },
+        "ani": {
+            "puntuacion_total": 17400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estrella",
+                "Ovni",
+                "Luna",
+                "Galaxia",
+                "Mercurio",
+                "Jupiter",
+                "Estacion",
+                "Urano",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Marte",
+                "Saturno",
+                "AgujeroNegro",
+                "Venus"
+            ],
+            "fecha_hora": "2026-05-29 19:04:01",
+            "cantidad_partidas": 1
+        },
+        "pag": {
+            "puntuacion_total": 7400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Marte",
+                "Jupiter",
+                "Neptuno",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Galaxia",
+                "CometaHalley",
+                "Estrella",
+                "Saturno",
+                "Luna",
+                "Urano"
+            ],
+            "fecha_hora": "2026-05-29 19:11:46",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -1203,6 +1268,71 @@
                 "Estrella"
             ],
             "fecha_hora": "2026-05-27 19:37:27"
+        },
+        {
+            "nombre": "uli",
+            "puntuacion_total": 17000,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Neptuno",
+                "Venus",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Ovni",
+                "CometaHalley",
+                "Jupiter",
+                "AgujeroNegro",
+                "Saturno",
+                "Estacion",
+                "Galaxia",
+                "Urano",
+                "Luna"
+            ],
+            "fecha_hora": "2026-05-29 18:55:51"
+        },
+        {
+            "nombre": "ani",
+            "puntuacion_total": 17400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estrella",
+                "Ovni",
+                "Luna",
+                "Galaxia",
+                "Mercurio",
+                "Jupiter",
+                "Estacion",
+                "Urano",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Marte",
+                "Saturno",
+                "AgujeroNegro",
+                "Venus"
+            ],
+            "fecha_hora": "2026-05-29 19:04:01"
+        },
+        {
+            "nombre": "pag",
+            "puntuacion_total": 7400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Marte",
+                "Jupiter",
+                "Neptuno",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Galaxia",
+                "CometaHalley",
+                "Estrella",
+                "Saturno",
+                "Luna",
+                "Urano"
+            ],
+            "fecha_hora": "2026-05-29 19:11:46"
         }
     ],
     "top_scores": [
@@ -1219,8 +1349,16 @@
             "puntos": 18000
         },
         {
+            "nombre": "ani",
+            "puntos": 17400
+        },
+        {
             "nombre": "sadaheh",
             "puntos": 17200
+        },
+        {
+            "nombre": "uli",
+            "puntos": 17000
         },
         {
             "nombre": "assda",
@@ -1233,6 +1371,10 @@
         {
             "nombre": "asdassd",
             "puntos": 15400
+        },
+        {
+            "nombre": "pag",
+            "puntos": 7400
         },
         {
             "nombre": "sadaas",
