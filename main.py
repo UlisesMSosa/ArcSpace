@@ -29,7 +29,7 @@ ESTADOS_INTERMISION = (
     ESTADO_INTERMISION_MEJORA, ESTADO_INTERMISION_PAUSA,
 )
 
-OBJETIVOS_POR_NIVEL = {1: 500, 2: 1000, 3: 2000, 4: 3500, 5: 5000}
+OBJETIVOS_POR_NIVEL = {1: 500, 2: 1000, 3: 2000, 4: 3500}
 TIEMPO_INICIAL      = 120
 
 
@@ -100,11 +100,14 @@ def render_gradiente_texto(fuente, texto, color1, color2):
 
 def cargar_imagen(ruta, escala=None):
     img = pygame.image.load(ruta)
-    try:
-        has_alpha = img.get_flags() & pygame.SRCALPHA
-    except AttributeError:
-        has_alpha = False
-    img = img.convert_alpha() if has_alpha else img.convert()
+    # convert_alpha() es seguro para cualquier imagen; convert() es más rápido
+    # para imágenes sin transparencia, pero get_flags() no es confiable antes
+    # del primer blit. Usar la extensión como heurística fiable.
+    ext = str(ruta).lower()
+    if ext.endswith(".png") or ext.endswith(".gif"):
+        img = img.convert_alpha()
+    else:
+        img = img.convert()
     if escala:
         img = pygame.transform.scale(img, escala)
     return img
@@ -229,6 +232,9 @@ class Camara(pygame.sprite.Sprite):
         self.color_texto_foto    = (255, 255, 255)
         self.tiempo_foto         = 0
 
+        # Fuente cargada una sola vez (no en cada frame dentro de _render)
+        self._fuente_foto = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 32)
+
         self.image = self._render()
 
     # -- Dibujo --
@@ -259,8 +265,7 @@ class Camara(pygame.sprite.Sprite):
             if pygame.time.get_ticks() - self.tiempo_foto > 500:
                 self.mostrar_texto_foto = False
             else:
-                fuente = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 32)
-                texto  = fuente.render(self.texto_foto, False, self.color_texto_foto)
+                texto = self._fuente_foto.render(self.texto_foto, False, self.color_texto_foto)
                 surf.blit(texto, texto.get_rect(center=(cx, cy + 90)))
         return surf
 
@@ -447,9 +452,17 @@ def crear_astros():
     total        = sum(a.get("cantidad", 1) for a in astros_nivel)
     ocupadas     = {a.rect.center for a in astros_grupo}
     disponibles  = [p for p in POSICIONES_FIJAS if p not in ocupadas]
-    posiciones   = random.sample(disponibles, total)
+    if total > len(disponibles):
+        # Más astros que posiciones disponibles: usar todas las disponibles
+        # (puede ocurrir si se acumulan astros de rondas anteriores)
+        posiciones = disponibles[:]
+        random.shuffle(posiciones)
+    else:
+        posiciones = random.sample(disponibles, total)
     for dato in astros_nivel:
         for _ in range(dato.get("cantidad", 1)):
+            if not posiciones:
+                break
             astros_grupo.add(Astro(dato, posiciones.pop(0)))
 
 
@@ -857,16 +870,8 @@ def mostrar_album_puntajes():
     dibujar_flechas_album(pantalla, pagina_actual_album, total_paginas)
 
     # --- Overlay de animación de página ---
-    if pag_slide_album_activa and pag_slide_album_captura is not None:
-        elapsed = pygame.time.get_ticks() - pag_slide_album_inicio
-        t = min(elapsed / PAG_SLIDE_DURACION, 1.0)
-        if t >= 1.0:
-            pag_slide_album_activa = False
-            pag_slide_album_captura = None
-        else:
-            alpha = int(255 * (1 - t * t))
-            pag_slide_album_captura.set_alpha(alpha)
-            pantalla.blit(pag_slide_album_captura, (0, 0))
+    pag_slide_album_activa, pag_slide_album_captura = _dibujar_overlay_slide(
+        pag_slide_album_activa, pag_slide_album_captura, pag_slide_album_inicio)
 
 
 # ---------------------------------------------------------------------------
@@ -977,16 +982,8 @@ def mostrar_reporte():
     pantalla.blit(m_img, m_img.get_rect(left=r_m.right + 10, centery=ALTO - 30))
 
     # --- Overlay de animación de página ---
-    if pag_slide_activa and pag_slide_captura is not None:
-        elapsed = pygame.time.get_ticks() - pag_slide_inicio
-        t = min(elapsed / PAG_SLIDE_DURACION, 1.0)
-        if t >= 1.0:
-            pag_slide_activa = False
-            pag_slide_captura = None
-        else:
-            alpha = int(255 * (1 - t * t))
-            pag_slide_captura.set_alpha(alpha)
-            pantalla.blit(pag_slide_captura, (0, 0))
+    pag_slide_activa, pag_slide_captura = _dibujar_overlay_slide(
+        pag_slide_activa, pag_slide_captura, pag_slide_inicio)
 
 
 def _dibujar_cabecera_reporte(posiciones_pagina):
@@ -1447,6 +1444,21 @@ def _solicitar_slide_pagina(direccion, total_pags, slide_solicitada, pagina_actu
     return True
 
 
+def _dibujar_overlay_slide(activa, captura, inicio):
+    """Dibuja el overlay de fade-out de cambio de página.
+    Devuelve (activa, captura) con los valores actualizados."""
+    if not activa or captura is None:
+        return activa, captura
+    elapsed = pygame.time.get_ticks() - inicio
+    t = min(elapsed / PAG_SLIDE_DURACION, 1.0)
+    if t >= 1.0:
+        return False, None
+    alpha = int(255 * (1 - t * t))
+    captura.set_alpha(alpha)
+    pantalla.blit(captura, (0, 0))
+    return activa, captura
+
+
 def eventos_reporte(event):
     global estado_actual, nivel, puntuacion, puntuacion_total_partida
     global fotos, fotos_reporte_instancias, fotos_pegadas_permanentes
@@ -1567,7 +1579,7 @@ def _resetear_partida_completa():
     global fotos_reporte_instancias, fotos_permanentes_vista
     global fotos_pegadas_permanentes, album, coleccion
     global nombre_jugador, tipo_pausa, objetivo_completado
-    global puntos_flotantes
+    global puntos_flotantes, objetivo_nivel5_inicial
 
     fotos_pegadas_permanentes.clear()
     album.clear()
@@ -1762,10 +1774,9 @@ def mostrar_felicitacion():
 
     # --- Fondo: destellos de estrellas ---
     if not hasattr(mostrar_felicitacion, '_stars'):
-        import random as _rnd
         mostrar_felicitacion._stars = [
-            (_rnd.randint(0, ANCHO), _rnd.randint(0, ALTO),
-             _rnd.uniform(0.5, 2.5), _rnd.uniform(0, math.pi * 2))
+            (random.randint(0, ANCHO), random.randint(0, ALTO),
+             random.uniform(0.5, 2.5), random.uniform(0, math.pi * 2))
             for _ in range(120)
         ]
     for sx, sy, spd, phase in mostrar_felicitacion._stars:
@@ -1891,24 +1902,16 @@ def eventos_felicitacion(event):
 
 
 def _iniciar_nueva_partida_felicit():
-    global estado_actual, nivel, puntuacion, puntuacion_total_partida
-    global fotos, fotos_tutorial, fotos_reporte_instancias, fotos_permanentes_vista
-    global fotos_pegadas_permanentes, album, coleccion, tipo_pausa
-    global nombre_jugador, tiempo_inicio_intermision1, objetivo_completado
-
-    fotos_pegadas_permanentes.clear()
-    album.clear()
-    coleccion.clear()
-    fotos_reporte_instancias.clear()
-    fotos_permanentes_vista.clear()
-    nivel = 1
-    puntuacion = puntuacion_total_partida = 0
-    fotos = fotos_tutorial = FOTOS_INICIALES
-    tipo_pausa = ""
-    nombre_jugador = ""
-    objetivo_completado = True
+    global estado_actual
+    # Limpiar estado visual específico de la pantalla de felicitación
     if hasattr(mostrar_felicitacion, '_stars'):
         del mostrar_felicitacion._stars
+    if hasattr(mostrar_felicitacion, '_titulo'):
+        del mostrar_felicitacion._titulo
+        del mostrar_felicitacion._sub
+    if hasattr(mostrar_felicitacion, '_panel'):
+        del mostrar_felicitacion._panel
+    _resetear_partida_completa()
     estado_actual = ESTADO_MENU
 
 

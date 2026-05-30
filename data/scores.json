@@ -851,6 +851,54 @@
             ],
             "fecha_hora": "2026-05-29 20:40:43",
             "cantidad_partidas": 1
+        },
+        "Claude": {
+            "puntuacion_total": 20050,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Neptuno",
+                "Galaxia",
+                "Urano",
+                "Ovni",
+                "AgujeroNegro",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Estacion",
+                "Saturno",
+                "Venus",
+                "Jupiter",
+                "Mercurio",
+                "Luna",
+                "CometaHalley",
+                "Estrella",
+                "Marte"
+            ],
+            "fecha_hora": "2026-05-29 20:56:03",
+            "cantidad_partidas": 1
+        },
+        "cin": {
+            "puntuacion_total": 20300,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Venus",
+                "Jupiter",
+                "Agujero De Gusano",
+                "Estacion",
+                "Mercurio",
+                "CometaHalley",
+                "Marte",
+                "Urano",
+                "Luna",
+                "Ovni",
+                "Estrella",
+                "Galaxia",
+                "Nebulosa",
+                "Neptuno",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-05-29 21:06:06",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -1773,12 +1821,68 @@
                 "Neptuno"
             ],
             "fecha_hora": "2026-05-29 20:40:43"
+        },
+        {
+            "nombre": "Claude",
+            "puntuacion_total": 20050,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Neptuno",
+                "Galaxia",
+                "Urano",
+                "Ovni",
+                "AgujeroNegro",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Estacion",
+                "Saturno",
+                "Venus",
+                "Jupiter",
+                "Mercurio",
+                "Luna",
+                "CometaHalley",
+                "Estrella",
+                "Marte"
+            ],
+            "fecha_hora": "2026-05-29 20:56:03"
+        },
+        {
+            "nombre": "cin",
+            "puntuacion_total": 20300,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Venus",
+                "Jupiter",
+                "Agujero De Gusano",
+                "Estacion",
+                "Mercurio",
+                "CometaHalley",
+                "Marte",
+                "Urano",
+                "Luna",
+                "Ovni",
+                "Estrella",
+                "Galaxia",
+                "Nebulosa",
+                "Neptuno",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-05-29 21:06:06"
         }
     ],
     "top_scores": [
         {
             "nombre": "asdasds",
             "puntos": 20300
+        },
+        {
+            "nombre": "cin",
+            "puntos": 20300
+        },
+        {
+            "nombre": "Claude",
+            "puntos": 20050
         },
         {
             "nombre": "obj",
