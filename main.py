@@ -1331,6 +1331,7 @@ def eventos_menu(event):
     global tiempo_inicio_intermision1, astros_grupo, puntuacion, puntuacion_total_partida
     global tipo_pausa, fotos_tutorial, jugadores_ordenados, scroll_offset
     global objetivo_completado, boton_salir_rect
+    global sesion_mejor_puntuacion, sesion_astros_descubiertos, sesion_mejor_nivel
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
@@ -1346,6 +1347,9 @@ def eventos_menu(event):
                 tipo_pausa = ""
                 fotos_tutorial = FOTOS_INICIALES
                 objetivo_completado = True
+                sesion_mejor_puntuacion = 0
+                sesion_astros_descubiertos = set()
+                sesion_mejor_nivel = 0
                 crear_astros()
                 estado_actual = ESTADO_INTERMISION1
             elif nombre_jugador:
@@ -1505,6 +1509,7 @@ def eventos_reporte(event):
     global album, coleccion, nombre_jugador, pagina_actual
     global tiempo_inicio_intermision_mejora, tipo_pausa, fotos_tutorial
     global pag_slide_solicitada, pag_slide_activa
+    global sesion_mejor_puntuacion, sesion_astros_descubiertos, sesion_mejor_nivel
 
     todas_pegadas = all(f.estado == 'pegada' for f in fotos_reporte_instancias)
     todas_fotos = fotos_reporte_instancias + fotos_permanentes_vista
@@ -1563,7 +1568,13 @@ def eventos_reporte(event):
                         f.estado = 'girando'; break
 
         if event.key == pygame.K_m:
-            guardar_puntuacion()
+            punt_actual = puntuacion_total_partida + puntuacion
+            if punt_actual > sesion_mejor_puntuacion:
+                sesion_mejor_puntuacion = punt_actual
+                sesion_mejor_nivel = nivel
+            sesion_astros_descubiertos.update(
+                set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion))
+            _guardar_sesion()
             nombres_existentes.add(nombre_jugador.lower())
             _resetear_partida_completa()
             estado_actual = ESTADO_MENU
@@ -1577,15 +1588,21 @@ def _avanzar_o_reiniciar():
     global puntos_flotantes
     global felicitacion_fotos, felicitacion_puntaje, felicitacion_ticks
     global objetivo_completado, astros_grupo
+    global sesion_mejor_puntuacion, sesion_astros_descubiertos, sesion_mejor_nivel
 
     if (nivel == 5 and objetivo_actual() <= 0) or (nivel != 5 and puntuacion >= objetivo_actual()):
         objetivo_completado = True
         if nivel == 5:
             # ¡Juego completo! Mostrar pantalla de felicitación
             felicitacion_fotos   = len(set(a["nombre"] for a in album)) + len(set(a["nombre"] for a in coleccion))
-            felicitacion_puntaje = puntuacion_total_partida + puntuacion
+            punt_actual = puntuacion_total_partida + puntuacion
+            felicitacion_puntaje = punt_actual
             felicitacion_ticks   = pygame.time.get_ticks()
-            guardar_puntuacion()
+            if punt_actual > sesion_mejor_puntuacion:
+                sesion_mejor_puntuacion = punt_actual
+                sesion_mejor_nivel = nivel
+            sesion_astros_descubiertos.update(
+                set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion))
             nombres_existentes.add(nombre_jugador.lower())
             estado_actual = ESTADO_FELICITACION
             return
@@ -1764,6 +1781,10 @@ felicitacion_ticks   = 0
 felicitacion_boton_jugar_rect = pygame.Rect(0, 0, 0, 0)
 felicitacion_boton_menu_rect  = pygame.Rect(0, 0, 0, 0)
 
+sesion_mejor_puntuacion    = 0
+sesion_astros_descubiertos = set()
+sesion_mejor_nivel         = 0
+
 flash_activo = False
 flash_tiempo = 0
 
@@ -1935,12 +1956,46 @@ def mostrar_felicitacion():
     pantalla.blit(hint, hint.get_rect(center=(ANCHO // 2, ALTO - 30)))
 
 
+def _guardar_sesion():
+    global scores, sesion_mejor_puntuacion, sesion_astros_descubiertos, sesion_mejor_nivel
+    if not nombre_jugador:
+        return
+    datos    = cargar_scores()
+    ahora    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    descubiertos = list(sesion_astros_descubiertos)
+
+    if nombre_jugador not in datos["jugadores"]:
+        datos["jugadores"][nombre_jugador] = {
+            "puntuacion_total": 0, "nivel_maximo": 0,
+            "astros_descubiertos": [], "fecha_hora": "", "cantidad_partidas": 0,
+        }
+    p = datos["jugadores"][nombre_jugador]
+    p["cantidad_partidas"] += 1
+    if sesion_mejor_puntuacion > p["puntuacion_total"]:
+        p["puntuacion_total"]     = sesion_mejor_puntuacion
+        p["nivel_maximo"]         = sesion_mejor_nivel
+        p["astros_descubiertos"]  = descubiertos
+        p["fecha_hora"]           = ahora
+
+    datos["partidas"].append({
+        "nombre": nombre_jugador, "puntuacion_total": sesion_mejor_puntuacion,
+        "nivel_maximo": sesion_mejor_nivel, "astros_descubiertos": descubiertos, "fecha_hora": ahora,
+    })
+    sorted_p = sorted(datos["jugadores"].items(), key=lambda x: x[1]["puntuacion_total"], reverse=True)
+    datos["top_scores"] = [{"nombre": k, "puntos": v["puntuacion_total"]} for k, v in sorted_p]
+
+    with open('data/scores.json', 'w') as f:
+        json.dump(datos, f, indent=4)
+    scores = datos["top_scores"]
+
+
 def eventos_felicitacion(event):
     global estado_actual
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
             _iniciar_nueva_partida_felicit()
         elif event.key in (pygame.K_m, pygame.K_ESCAPE):
+            _guardar_sesion()
             _resetear_partida_completa()
             estado_actual = ESTADO_MENU
     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -1948,12 +2003,19 @@ def eventos_felicitacion(event):
         if felicitacion_boton_jugar_rect.collidepoint(pos):
             _iniciar_nueva_partida_felicit()
         elif felicitacion_boton_menu_rect.collidepoint(pos):
+            _guardar_sesion()
             _resetear_partida_completa()
             estado_actual = ESTADO_MENU
 
 
 def _iniciar_nueva_partida_felicit():
-    global estado_actual
+    global estado_actual, nivel, puntuacion, puntuacion_total_partida
+    global fotos, fotos_tutorial, fotos_reporte_instancias, fotos_permanentes_vista
+    global album, coleccion, fotos_pegadas_permanentes, puntos_flotantes
+    global objetivo_nivel5_inicial, tipo_pausa, objetivo_completado, astros_grupo
+    global tiempo_inicio_intermision1, pagina_actual
+    global pag_slide_activa, pag_slide_solicitada, pag_slide_captura
+
     # Limpiar estado visual específico de la pantalla de felicitación
     if hasattr(mostrar_felicitacion, '_stars'):
         del mostrar_felicitacion._stars
@@ -1962,8 +2024,30 @@ def _iniciar_nueva_partida_felicit():
         del mostrar_felicitacion._sub
     if hasattr(mostrar_felicitacion, '_panel'):
         del mostrar_felicitacion._panel
-    _resetear_partida_completa()
-    estado_actual = ESTADO_MENU
+
+    # Resetear estado de partida pero CONSERVAR nombre_jugador y sesion_*
+    fotos_pegadas_permanentes.clear()
+    album.clear()
+    coleccion.clear()
+    fotos_reporte_instancias.clear()
+    fotos_permanentes_vista.clear()
+    puntos_flotantes.clear()
+    nivel = 1
+    puntuacion = puntuacion_total_partida = 0
+    fotos = fotos_tutorial = FOTOS_INICIALES
+    tipo_pausa = ""
+    objetivo_completado = True
+    objetivo_nivel5_inicial = 0
+    astros_grupo = pygame.sprite.Group()
+    camara.sprite.rect.center = (ANCHO // 2, ALTO // 2)
+    pagina_actual = 0
+    pag_slide_activa = False
+    pag_slide_solicitada = 0
+    pag_slide_captura = None
+
+    # Ir a tutorial 1 para empezar nueva partida
+    tiempo_inicio_intermision1 = pygame.time.get_ticks()
+    estado_actual = ESTADO_INTERMISION1
 
 
 # ---------------------------------------------------------------------------
