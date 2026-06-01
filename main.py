@@ -383,6 +383,7 @@ class FotoReporte(pygame.sprite.Sprite):
         self.angulo   = 0.0
         self.hover    = False
         self.pagina   = 0
+        self._sonido_giro_emitido = False
 
         pw, ph = surf_pixel.get_size()
         escala = min(rect_destino.w / pw, rect_destino.h / ph)
@@ -400,6 +401,9 @@ class FotoReporte(pygame.sprite.Sprite):
             self._animar_pegado()
 
     def _animar_giro(self):
+        if not self._sonido_giro_emitido:
+            sonido_giro.play()
+            self._sonido_giro_emitido = True
         self.velocidad_angular = min(getattr(self, 'velocidad_angular', 0.02) + 0.003, 0.3)
         self.angulo += self.velocidad_angular
         seno         = math.sin(self.angulo)
@@ -411,7 +415,7 @@ class FotoReporte(pygame.sprite.Sprite):
         self.rect  = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
 
         if self.angulo >= 10 * math.pi and abs(seno) > 0.95:
-            # La imagen real aparece de golpe; guardamos el momento para el flash
+            sonido_giro.stop()
             self._flash_inicio = pygame.time.get_ticks()
             self.image = escalar_rellenar(self.superficie_real, *self.tamanio_anim)
             self.rect  = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
@@ -1673,6 +1677,7 @@ sonido_camara           = pygame.mixer.Sound("assets/Sonido/camara.mp3")
 sonido_objetivocompleto = pygame.mixer.Sound("assets/Sonido/objetivocompleto.ogg")
 sonido_gameover         = pygame.mixer.Sound("assets/Sonido/gameover.mp3")
 sonido_felicitaciones   = pygame.mixer.Sound("assets/Sonido/felicitaciones.mp3")
+sonido_giro             = pygame.mixer.Sound("assets/Sonido/whoshfinal.mp3")
 _menu_musica_sonando    = False
 _juego_musica_sonando   = False
 

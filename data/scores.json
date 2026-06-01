@@ -1056,6 +1056,17 @@
             ],
             "fecha_hora": "2026-06-01 18:06:48",
             "cantidad_partidas": 1
+        },
+        "whosh": {
+            "puntuacion_total": 1000,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Marte",
+                "Luna",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-06-01 18:32:02",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -2204,6 +2215,17 @@
                 "Saturno"
             ],
             "fecha_hora": "2026-06-01 18:06:48"
+        },
+        {
+            "nombre": "whosh",
+            "puntuacion_total": 1000,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Marte",
+                "Luna",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-06-01 18:32:02"
         }
     ],
     "top_scores": [
@@ -2393,6 +2415,10 @@
         },
         {
             "nombre": "asdasa",
+            "puntos": 1000
+        },
+        {
+            "nombre": "whosh",
             "puntos": 1000
         },
         {
