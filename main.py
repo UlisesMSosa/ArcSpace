@@ -30,7 +30,7 @@ ESTADOS_INTERMISION = (
 )
 
 OBJETIVOS_POR_NIVEL = {1: 500, 2: 1000, 3: 2000, 4: 3500, 5: 5000}
-TIEMPO_INICIAL      = 120
+TIEMPO_INICIAL      = 60
 
 
 def objetivo_nivel5():
@@ -384,6 +384,7 @@ class FotoReporte(pygame.sprite.Sprite):
         self.hover    = False
         self.pagina   = 0
         self._sonido_giro_emitido = False
+        self._sonido_pegado_emitido = False
 
         pw, ph = surf_pixel.get_size()
         escala = min(rect_destino.w / pw, rect_destino.h / ph)
@@ -416,6 +417,7 @@ class FotoReporte(pygame.sprite.Sprite):
 
         if self.angulo >= 10 * math.pi and abs(seno) > 0.95:
             sonido_giro.stop()
+            sonido_revelada.play()
             self._flash_inicio = pygame.time.get_ticks()
             self.image = escalar_rellenar(self.superficie_real, *self.tamanio_anim)
             self.rect  = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
@@ -451,6 +453,9 @@ class FotoReporte(pygame.sprite.Sprite):
         h  = max(int(self._pegando_start_size[1] + (self._pegando_end_size[1] - self._pegando_start_size[1]) * ease), 1)
 
         if t >= 1.0:
+            if not self._sonido_pegado_emitido:
+                sonido_pegado.play()
+                self._sonido_pegado_emitido = True
             self.image  = escalar_rellenar(self.superficie_real, *self.tamanio_relleno)
             self.rect   = self.image.get_rect(center=self._pegando_end_center)
             self.estado = 'pegada'
@@ -1427,10 +1432,12 @@ def eventos_album_puntajes(event):
             posiciones_pagina = calcular_posiciones_pagina(astros)
             if _solicitar_slide_pagina(-1, len(posiciones_pagina), pag_slide_album_solicitada, pagina_actual_album):
                 pag_slide_album_solicitada = -1
+                sonido_cambio_pagina.play()
         elif event.key == pygame.K_RIGHT and not hay_slide_album:
             posiciones_pagina = calcular_posiciones_pagina(astros)
             if _solicitar_slide_pagina(1, len(posiciones_pagina), pag_slide_album_solicitada, pagina_actual_album):
                 pag_slide_album_solicitada = 1
+                sonido_cambio_pagina.play()
     if event.type == pygame.MOUSEWHEEL:
         if not hay_slide_album:
             posiciones_pagina = calcular_posiciones_pagina(astros)
@@ -1438,6 +1445,7 @@ def eventos_album_puntajes(event):
             direccion = -1 if event.y > 0 else 1
             if _solicitar_slide_pagina(direccion, total, pag_slide_album_solicitada, pagina_actual_album):
                 pag_slide_album_solicitada = direccion
+                sonido_cambio_pagina.play()
     if event.type == pygame.MOUSEBUTTONDOWN:
         if boton_volver_rect.collidepoint(event.pos):
             estado_actual = ESTADO_PUNTAJES
@@ -1457,9 +1465,9 @@ def eventos_album_puntajes(event):
         # Flechas
         if pagina_actual_album > 0:
             if pygame.Rect(FLECHA_IZQ_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-                pag_slide_album_solicitada = -1; return
+                pag_slide_album_solicitada = -1; sonido_cambio_pagina.play(); return
         if pygame.Rect(FLECHA_DER_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-            pag_slide_album_solicitada = 1
+            pag_slide_album_solicitada = 1; sonido_cambio_pagina.play()
     if event.type == pygame.MOUSEMOTION:
         for f in fotos_album_puntajes:
             f.hover = f.estado == 'revelada' and f.rect.collidepoint(event.pos)
@@ -1557,10 +1565,10 @@ def eventos_reporte(event):
         total_paginas = len(calcular_posiciones_pagina(astros))
         if _solicitar_slide_pagina(-1, total_paginas, pag_slide_solicitada, pagina_actual):
             if pygame.Rect(FLECHA_IZQ_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-                pag_slide_solicitada = -1; return
+                pag_slide_solicitada = -1; sonido_cambio_pagina.play(); return
         if _solicitar_slide_pagina(1, total_paginas, pag_slide_solicitada, pagina_actual):
             if pygame.Rect(FLECHA_DER_X, FLECHA_Y, TAM_FLECHA, TAM_FLECHA).collidepoint(pos):
-                pag_slide_solicitada = 1
+                pag_slide_solicitada = 1; sonido_cambio_pagina.play()
 
     if event.type == pygame.KEYDOWN:
         if hay_transicion or hay_slide:
@@ -1678,6 +1686,9 @@ sonido_objetivocompleto = pygame.mixer.Sound("assets/Sonido/objetivocompleto.ogg
 sonido_gameover         = pygame.mixer.Sound("assets/Sonido/gameover.mp3")
 sonido_felicitaciones   = pygame.mixer.Sound("assets/Sonido/felicitaciones.mp3")
 sonido_giro             = pygame.mixer.Sound("assets/Sonido/whoshfinal.mp3")
+sonido_revelada         = pygame.mixer.Sound("assets/Sonido/revelada.wav")
+sonido_pegado           = pygame.mixer.Sound("assets/Sonido/pegado.mp3")
+sonido_cambio_pagina    = pygame.mixer.Sound("assets/Sonido/Cambio-Pagina.wav")
 _menu_musica_sonando    = False
 _juego_musica_sonando   = False
 

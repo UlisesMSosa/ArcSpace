@@ -1067,6 +1067,30 @@
             ],
             "fecha_hora": "2026-06-01 18:32:02",
             "cantidad_partidas": 1
+        },
+        "Final": {
+            "puntuacion_total": 18900,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Saturno",
+                "Mercurio",
+                "Galaxia",
+                "Neptuno",
+                "Estrella",
+                "AgujeroNegro",
+                "Nebulosa",
+                "Urano",
+                "Marte",
+                "Venus",
+                "Luna",
+                "CometaHalley",
+                "Ovni",
+                "Estacion",
+                "Jupiter",
+                "Agujero De Gusano"
+            ],
+            "fecha_hora": "2026-06-01 18:45:40",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -2226,6 +2250,30 @@
                 "Estrella"
             ],
             "fecha_hora": "2026-06-01 18:32:02"
+        },
+        {
+            "nombre": "Final",
+            "puntuacion_total": 18900,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Saturno",
+                "Mercurio",
+                "Galaxia",
+                "Neptuno",
+                "Estrella",
+                "AgujeroNegro",
+                "Nebulosa",
+                "Urano",
+                "Marte",
+                "Venus",
+                "Luna",
+                "CometaHalley",
+                "Ovni",
+                "Estacion",
+                "Jupiter",
+                "Agujero De Gusano"
+            ],
+            "fecha_hora": "2026-06-01 18:45:40"
         }
     ],
     "top_scores": [
@@ -2260,6 +2308,10 @@
         {
             "nombre": "obj",
             "puntos": 19000
+        },
+        {
+            "nombre": "Final",
+            "puntos": 18900
         },
         {
             "nombre": "sadasda",
