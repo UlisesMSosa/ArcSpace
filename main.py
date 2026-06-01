@@ -29,7 +29,7 @@ ESTADOS_INTERMISION = (
     ESTADO_INTERMISION_MEJORA, ESTADO_INTERMISION_PAUSA,
 )
 
-OBJETIVOS_POR_NIVEL = {1: 500, 2: 1000, 3: 2000, 4: 3500}
+OBJETIVOS_POR_NIVEL = {1: 500, 2: 1000, 3: 2000, 4: 3500, 5: 5000}
 TIEMPO_INICIAL      = 120
 
 
@@ -84,7 +84,12 @@ def escalar_rellenar(image, target_w, target_h):
     return scaled.subsurface((cx, cy, target_w, target_h)).copy()
 
 
+_gradiente_cache: dict = {}
+
 def render_gradiente_texto(fuente, texto, color1, color2):
+    clave = (id(fuente), texto, color1, color2)
+    if clave in _gradiente_cache:
+        return _gradiente_cache[clave]
     surf = fuente.render(texto, True, (255, 255, 255))
     w, h = surf.get_size()
     grad = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -95,6 +100,7 @@ def render_gradiente_texto(fuente, texto, color1, color2):
         b = int(color1[2] * (1 - t) + color2[2] * t)
         pygame.draw.line(grad, (r, g, b), (x, 0), (x, h))
     grad.blit(surf, (0, 0), None, pygame.BLEND_RGBA_MULT)
+    _gradiente_cache[clave] = grad
     return grad
 
 
@@ -123,6 +129,8 @@ def dibujar_rect_punteado(superficie, color, rect, dash=8):
         pygame.draw.line(superficie, color, (x + w, y + i), (x + w, min(y + i + dash, y + h)))
 
 
+_glow_cache: dict = {}
+
 def dibujar_boton(pantalla, fuente, texto, rect_base, y_center, right_edge=None,
                   color_fondo=(100, 0, 180), left_edge=None):
     """Dibuja un botón con hover y glow. Devuelve el rect final del botón."""
@@ -135,13 +143,17 @@ def dibujar_boton(pantalla, fuente, texto, rect_base, y_center, right_edge=None,
     if hover:
         surf = pygame.transform.scale(surf_base, (int(surf_base.get_width() * 1.1), int(surf_base.get_height() * 1.1)))
         btn_rect = surf.get_rect(center=r.center)
-        # Glow: halo semitransparente detrás del botón
+        # Glow: reusar surface por tamaño, solo actualizar alpha
         pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 200)
         glow_alpha = int(60 + 40 * pulse)
         glow_rect  = btn_rect.inflate(36, 18)
-        glow_surf  = pygame.Surface((glow_rect.width, glow_rect.height), pygame.SRCALPHA)
-        pygame.draw.rect(glow_surf, (180, 80, 255, glow_alpha),
-                         (0, 0, glow_rect.width, glow_rect.height), border_radius=12)
+        glow_key   = (glow_rect.width, glow_rect.height)
+        if glow_key not in _glow_cache:
+            gs = pygame.Surface(glow_key, pygame.SRCALPHA)
+            pygame.draw.rect(gs, (180, 80, 255, 255), (0, 0, *glow_key), border_radius=12)
+            _glow_cache[glow_key] = gs
+        glow_surf = _glow_cache[glow_key].copy()
+        glow_surf.set_alpha(glow_alpha)
         pantalla.blit(glow_surf, glow_rect)
     else:
         surf, btn_rect = surf_base, r
@@ -235,6 +247,15 @@ class Camara(pygame.sprite.Sprite):
         # Fuente cargada una sola vez (no en cada frame dentro de _render)
         self._fuente_foto = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 32)
 
+        # Superficies de anillos de sonar precalculadas: se reusan cada frame,
+        # solo se actualiza su alpha en lugar de crear nuevas Surface.
+        r = self.RADIO
+        self._ring_surfs = []
+        for ring_r in range(r, r + 46):
+            s = pygame.Surface((ring_r * 2 + 4, ring_r * 2 + 4), pygame.SRCALPHA)
+            pygame.draw.circle(s, (0, 255, 0, 255), (ring_r + 2, ring_r + 2), ring_r, 1)
+            self._ring_surfs.append(s)
+
         self.image = self._render()
 
     # -- Dibujo --
@@ -248,13 +269,12 @@ class Camara(pygame.sprite.Sprite):
         # Anillos de sonar que se expanden y desvanecen
         t = pygame.time.get_ticks() / 1000
         for i in range(3):
-            phase = (t * 0.6 + i / 3) % 1.0
-            ring_r = int(r + phase * 45)
-            alpha  = int(180 * (1 - phase))
+            phase   = (t * 0.6 + i / 3) % 1.0
+            ring_r  = int(self.RADIO + phase * 45)
+            alpha   = int(180 * (1 - phase))
             if alpha > 0:
-                ring_surf = pygame.Surface((ring_r * 2 + 4, ring_r * 2 + 4), pygame.SRCALPHA)
-                pygame.draw.circle(ring_surf, (0, 255, 0, alpha),
-                                   (ring_r + 2, ring_r + 2), ring_r, 1)
+                ring_surf = self._ring_surfs[ring_r - self.RADIO].copy()
+                ring_surf.set_alpha(alpha)
                 surf.blit(ring_surf, (cx - ring_r - 2, cy - ring_r - 2))
 
         pygame.draw.circle(surf, color, (cx, cy), r, 3)
@@ -608,17 +628,18 @@ def construir_fotos_album(astros_clave_list):
 # ---------------------------------------------------------------------------
 
 def mostrar_flash():
-    global flash_activo
+    global flash_activo, _surf_flash
     if not flash_activo:
         return
     alpha = max(0, 200 - int((pygame.time.get_ticks() - flash_tiempo) * 5))
     if alpha <= 0:
         flash_activo = False
         return
-    surf = pygame.Surface((ANCHO, ALTO))
-    surf.fill((220, 220, 220))
-    surf.set_alpha(alpha)
-    pantalla.blit(surf, (0, 0))
+    if _surf_flash is None:
+        _surf_flash = pygame.Surface((ANCHO, ALTO))
+        _surf_flash.fill((220, 220, 220))
+    _surf_flash.set_alpha(alpha)
+    pantalla.blit(_surf_flash, (0, 0))
 
 
 def mostrar_camaras(cuantas=None):
@@ -714,7 +735,7 @@ def mostrar_menu():
     global boton_puntajes_rect, boton_salir_rect
     t = pygame.time.get_ticks() / 1000
 
-    # Título flotante
+    # Título flotante (render_gradiente_texto ya está cacheado)
     titulo = render_gradiente_texto(fuente_titulo_grande, "ArcSpace", (100, 0, 180), (255, 215, 0))
     float_y = int(ALTO // 8 + math.sin(t * 1.4) * 6)
     titulo_rect = titulo.get_rect(center=(ANCHO // 2, float_y))
@@ -731,18 +752,33 @@ def mostrar_menu():
     start_x = (ANCHO - total_w) // 2
     center_y = ALTO // 2 + 70
     pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 150)
+
+    # Guión precalculado (misma surface, solo cambia el alpha)
+    if not hasattr(mostrar_menu, '_surf_guion'):
+        mostrar_menu._surf_guion = fuente_titulo.render("_", False, (150, 50, 200))
+    surf_g = mostrar_menu._surf_guion
+    surf_g.set_alpha(int(80 + 175 * pulse))
+
+    # Letras del nombre cacheadas por carácter
+    if not hasattr(mostrar_menu, '_letra_cache'):
+        mostrar_menu._letra_cache = {}
+    letra_cache = mostrar_menu._letra_cache
+
     for i in range(MAX_NOMBRE):
         x = start_x + i * (char_w + gap)
-        surf_g = fuente_titulo.render("_", False, (150, 50, 200))
-        surf_g.set_alpha(int(80 + 175 * pulse))
         pantalla.blit(surf_g, (x, center_y - char_h // 2))
         if i < len(nombre_jugador):
-            surf_l = fuente_titulo.render(nombre_jugador[i], False, (150, 50, 200))
-            pantalla.blit(surf_l, (x, center_y - char_h // 2 - 6))
+            c = nombre_jugador[i]
+            if c not in letra_cache:
+                letra_cache[c] = fuente_titulo.render(c, False, (150, 50, 200))
+            pantalla.blit(letra_cache[c], (x, center_y - char_h // 2 - 6))
 
-    # "PRESIONE ESPACIO" con pulso de escala
+    # "PRESIONE ESPACIO" con pulso de escala (la base se cachea, solo se re-escala)
     pulse = 1.0 + 0.04 * math.sin(t * 3.0)
-    base_surf = fuente_media.render("PRESIONE ESPACIO PARA INICIAR", False, (255, 255, 255))
+    if not hasattr(mostrar_menu, '_surf_instruccion'):
+        mostrar_menu._surf_instruccion = fuente_media.render(
+            "PRESIONE ESPACIO PARA INICIAR", False, (255, 255, 255))
+    base_surf = mostrar_menu._surf_instruccion
     w, h = int(base_surf.get_width() * pulse), int(base_surf.get_height() * pulse)
     instruccion = pygame.transform.scale(base_surf, (w, h))
     pantalla.blit(instruccion, instruccion.get_rect(center=(ANCHO // 2, ALTO // 2 + 140)))
@@ -948,10 +984,12 @@ def mostrar_reporte():
     for f in fotos_reporte_instancias + fotos_permanentes_vista:
         if f.estado == 'revelada':
             f.update()
-            # Overlay oscuro para enfocar la foto
-            overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 160))
-            pantalla.blit(overlay, (0, 0))
+            # Overlay oscuro para enfocar la foto (surface cacheada)
+            global _surf_overlay
+            if _surf_overlay is None:
+                _surf_overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+                _surf_overlay.fill((0, 0, 0, 160))
+            pantalla.blit(_surf_overlay, (0, 0))
             # Borde dorado sólido
             border_rect = f.rect.inflate(6, 6)
             pygame.draw.rect(pantalla, (255, 215, 0), border_rect, 3, border_radius=8)
@@ -961,9 +999,11 @@ def mostrar_reporte():
                 elapsed = (pygame.time.get_ticks() - f._flash_inicio) / 1000
                 if elapsed < 0.6:
                     fa = int(255 * (1 - elapsed / 0.6))
-                    flash_s = pygame.Surface(f.rect.size, pygame.SRCALPHA)
-                    flash_s.fill((255, 255, 255, fa))
-                    pantalla.blit(flash_s, f.rect)
+                    # Reusar surface cacheada en la propia foto
+                    if not hasattr(f, '_flash_surf') or f._flash_surf.get_size() != f.rect.size:
+                        f._flash_surf = pygame.Surface(f.rect.size, pygame.SRCALPHA)
+                    f._flash_surf.fill((255, 255, 255, fa))
+                    pantalla.blit(f._flash_surf, f.rect)
                 else:
                     del f._flash_inicio
             dibujar_panel_foto_revelada(pantalla, f)
@@ -1673,6 +1713,10 @@ assets_astros = {
 assets_reales = {}
 _thumb_cache = {}  # clave -> surface escalada a 80×80 (proporcional)
 
+# Superficies de pantalla completa cacheadas (se reusan cada frame)
+_surf_flash   = None   # inicializado después de pygame.init()
+_surf_overlay = None   # overlay oscuro del reporte
+
 # Datos
 astros = []
 with open("data/astros.json", "r") as f:
@@ -1779,13 +1823,16 @@ def mostrar_felicitacion():
              random.uniform(0.5, 2.5), random.uniform(0, math.pi * 2))
             for _ in range(120)
         ]
+        # Surface reutilizable para dibujar estrellas (sz máx = 2 → 4×4)
+        mostrar_felicitacion._star_surf = pygame.Surface((6, 6), pygame.SRCALPHA)
+    star_surf = mostrar_felicitacion._star_surf
     for sx, sy, spd, phase in mostrar_felicitacion._stars:
         a = int(120 + 120 * math.sin(t * spd + phase))
         sz = max(1, int(1 + math.sin(t * spd + phase + 1)))
         c = (255, 215, 0) if (sx + sy) % 3 == 0 else (200, 150, 255) if (sx + sy) % 3 == 1 else (255, 255, 255)
-        star_s = pygame.Surface((sz * 2, sz * 2), pygame.SRCALPHA)
-        pygame.draw.circle(star_s, (*c, a), (sz, sz), sz)
-        pantalla.blit(star_s, (sx - sz, sy - sz))
+        star_surf.fill((0, 0, 0, 0))
+        pygame.draw.circle(star_surf, (*c, a), (3, 3), sz)
+        pantalla.blit(star_surf, (sx - sz, sy - sz))
 
     # --- Título con gradiente y flotación ---
     float_y = int(ALTO // 6 + math.sin(t * 1.2) * 8)
@@ -1793,11 +1840,15 @@ def mostrar_felicitacion():
         mostrar_felicitacion._titulo = render_gradiente_texto(
             fuente_titulo_grande, "¡FELICIDADES!", (255, 215, 0), (200, 80, 255))
         mostrar_felicitacion._sub = fuente_media.render("Completaste el album", False, (255, 255, 255))
+        titulo_tmp = mostrar_felicitacion._titulo
+        mostrar_felicitacion._halo = pygame.Surface(
+            (titulo_tmp.get_width() + 60, titulo_tmp.get_height() + 30), pygame.SRCALPHA)
+        pygame.draw.ellipse(mostrar_felicitacion._halo,
+                            (255, 215, 0, 255), mostrar_felicitacion._halo.get_rect())
     titulo = mostrar_felicitacion._titulo
-    # Halo con alpha variable (se crea cada frame, un solo ellipse es barato)
+    halo   = mostrar_felicitacion._halo
     halo_a = int(60 + 40 * math.sin(t * 2))
-    halo = pygame.Surface((titulo.get_width() + 60, titulo.get_height() + 30), pygame.SRCALPHA)
-    pygame.draw.ellipse(halo, (255, 215, 0, halo_a), halo.get_rect())
+    halo.set_alpha(halo_a)
     pantalla.blit(halo, halo.get_rect(center=(ANCHO // 2, float_y)))
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, float_y)))
 

@@ -899,6 +899,78 @@
             ],
             "fecha_hora": "2026-05-29 21:06:06",
             "cantidad_partidas": 1
+        },
+        "asdasd": {
+            "puntuacion_total": 20550,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Venus",
+                "Neptuno",
+                "Estrella",
+                "CometaHalley",
+                "Mercurio",
+                "Saturno",
+                "Nebulosa",
+                "Luna",
+                "Marte",
+                "Urano",
+                "Galaxia",
+                "Ovni",
+                "Jupiter",
+                "Agujero De Gusano",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-01 16:33:26",
+            "cantidad_partidas": 1
+        },
+        "final?": {
+            "puntuacion_total": 19200,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Galaxia",
+                "Luna",
+                "Neptuno",
+                "Estacion",
+                "Jupiter",
+                "Ovni",
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Marte",
+                "Mercurio",
+                "Estrella",
+                "Venus",
+                "AgujeroNegro",
+                "Nebulosa",
+                "Urano",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-06-01 16:38:26",
+            "cantidad_partidas": 1
+        },
+        "vbm": {
+            "puntuacion_total": 20150,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Galaxia",
+                "Luna",
+                "Neptuno",
+                "Estacion",
+                "Jupiter",
+                "Ovni",
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Marte",
+                "Mercurio",
+                "Estrella",
+                "Venus",
+                "AgujeroNegro",
+                "Nebulosa",
+                "Urano",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-06-01 16:41:00",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -1869,9 +1941,85 @@
                 "Saturno"
             ],
             "fecha_hora": "2026-05-29 21:06:06"
+        },
+        {
+            "nombre": "asdasd",
+            "puntuacion_total": 20550,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Venus",
+                "Neptuno",
+                "Estrella",
+                "CometaHalley",
+                "Mercurio",
+                "Saturno",
+                "Nebulosa",
+                "Luna",
+                "Marte",
+                "Urano",
+                "Galaxia",
+                "Ovni",
+                "Jupiter",
+                "Agujero De Gusano",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-01 16:33:26"
+        },
+        {
+            "nombre": "final?",
+            "puntuacion_total": 19200,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Galaxia",
+                "Luna",
+                "Neptuno",
+                "Estacion",
+                "Jupiter",
+                "Ovni",
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Marte",
+                "Mercurio",
+                "Estrella",
+                "Venus",
+                "AgujeroNegro",
+                "Nebulosa",
+                "Urano",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-06-01 16:38:26"
+        },
+        {
+            "nombre": "vbm",
+            "puntuacion_total": 20150,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Galaxia",
+                "Luna",
+                "Neptuno",
+                "Estacion",
+                "Jupiter",
+                "Ovni",
+                "Agujero De Gusano",
+                "CometaHalley",
+                "Marte",
+                "Mercurio",
+                "Estrella",
+                "Venus",
+                "AgujeroNegro",
+                "Nebulosa",
+                "Urano",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-06-01 16:41:00"
         }
     ],
     "top_scores": [
+        {
+            "nombre": "asdasd",
+            "puntos": 20550
+        },
         {
             "nombre": "asdasds",
             "puntos": 20300
@@ -1881,8 +2029,16 @@
             "puntos": 20300
         },
         {
+            "nombre": "vbm",
+            "puntos": 20150
+        },
+        {
             "nombre": "Claude",
             "puntos": 20050
+        },
+        {
+            "nombre": "final?",
+            "puntos": 19200
         },
         {
             "nombre": "obj",
