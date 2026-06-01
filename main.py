@@ -490,6 +490,7 @@ def tomar_foto():
     global flash_activo, flash_tiempo, puntos_flotantes
     flash_activo = True
     flash_tiempo = pygame.time.get_ticks()
+    sonido_camara.play()
 
     colisiones = pygame.sprite.spritecollide(camara.sprite, astros_grupo, False)
     if not colisiones:
@@ -735,13 +736,13 @@ def mostrar_menu():
     global boton_puntajes_rect, boton_salir_rect
     t = pygame.time.get_ticks() / 1000
 
-    # Título flotante (render_gradiente_texto ya está cacheado)
-    titulo = render_gradiente_texto(fuente_titulo_grande, "ArcSpace", (100, 0, 180), (255, 215, 0))
+    # Título flotante dorado
+    titulo = fuente_titulo_grande.render("ArcSpace", False, (255, 215, 0))
     float_y = int(ALTO // 8 + math.sin(t * 1.4) * 6)
     titulo_rect = titulo.get_rect(center=(ANCHO // 2, float_y))
     pantalla.blit(titulo, titulo_rect)
 
-    label = fuente_media.render("INGRESA TU NOMBRE", False, (255, 255, 255))
+    label = fuente_media.render("INGRESA TU NOMBRE", False, (245, 55, 42))
     pantalla.blit(label, label.get_rect(center=(ANCHO // 2, ALTO // 2)))
 
     # Guiones vacíos debajo del nombre con letras superpuestas
@@ -760,8 +761,9 @@ def mostrar_menu():
     surf_g.set_alpha(int(80 + 175 * pulse))
 
     # Letras del nombre cacheadas por carácter
-    if not hasattr(mostrar_menu, '_letra_cache'):
+    if not hasattr(mostrar_menu, '_letra_cache') or mostrar_menu._letra_color != (255, 215, 0):
         mostrar_menu._letra_cache = {}
+        mostrar_menu._letra_color = (255, 215, 0)
     letra_cache = mostrar_menu._letra_cache
 
     for i in range(MAX_NOMBRE):
@@ -770,14 +772,15 @@ def mostrar_menu():
         if i < len(nombre_jugador):
             c = nombre_jugador[i]
             if c not in letra_cache:
-                letra_cache[c] = fuente_titulo.render(c, False, (150, 50, 200))
+                letra_cache[c] = fuente_titulo.render(c, False, (255, 215, 0))
             pantalla.blit(letra_cache[c], (x, center_y - char_h // 2 - 6))
 
     # "PRESIONE ESPACIO" con pulso de escala (la base se cachea, solo se re-escala)
     pulse = 1.0 + 0.04 * math.sin(t * 3.0)
-    if not hasattr(mostrar_menu, '_surf_instruccion'):
+    if not hasattr(mostrar_menu, '_surf_instruccion') or mostrar_menu._surf_color_actual != (245, 55, 42):
         mostrar_menu._surf_instruccion = fuente_media.render(
-            "PRESIONE ESPACIO PARA INICIAR", False, (255, 255, 255))
+            "PRESIONE ESPACIO PARA INICIAR", False, (245, 55, 42))
+        mostrar_menu._surf_color_actual = (245, 55, 42)
     base_surf = mostrar_menu._surf_instruccion
     w, h = int(base_surf.get_width() * pulse), int(base_surf.get_height() * pulse)
     instruccion = pygame.transform.scale(base_surf, (w, h))
@@ -791,9 +794,9 @@ def mostrar_menu():
 
     if nombre_erroneo:
         err = fuente_pequena.render("YA EXISTE UN JUGADOR CON ESE NOMBRE", False, (255, 0, 0))
-        pantalla.blit(err, err.get_rect(center=(ANCHO // 2, ALTO - 30)))
+        pantalla.blit(err, err.get_rect(center=(ANCHO // 2, ALTO - 80)))
 
-    creado = fuente_pequena.render("Creado por Ulises Sosa", False, (150, 50, 200))
+    creado = fuente_pequena.render("Creado por Ulises Sosa", False, (255, 215, 0))
     cr = creado.get_rect(center=(ANCHO // 2, ALTO - 20))
     pantalla.blit(creado, cr)
     pantalla.blit(img_nacional, img_nacional.get_rect(left=cr.right + 8, centery=cr.centery))
@@ -1604,6 +1607,7 @@ def _avanzar_o_reiniciar():
             sesion_astros_descubiertos.update(
                 set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion))
             nombres_existentes.add(nombre_jugador.lower())
+            sonido_felicitaciones.play()
             estado_actual = ESTADO_FELICITACION
             return
         else:
@@ -1664,6 +1668,14 @@ clock = pygame.time.Clock()
 pantalla.fill((0, 0, 0))
 pygame.display.flip()
 
+pygame.mixer.init()
+sonido_camara           = pygame.mixer.Sound("assets/Sonido/camara.mp3")
+sonido_objetivocompleto = pygame.mixer.Sound("assets/Sonido/objetivocompleto.ogg")
+sonido_gameover         = pygame.mixer.Sound("assets/Sonido/gameover.mp3")
+sonido_felicitaciones   = pygame.mixer.Sound("assets/Sonido/felicitaciones.mp3")
+_menu_musica_sonando    = False
+_juego_musica_sonando   = False
+
 fuente_titulo_grande = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 110)
 fuente_titulo        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
 fuente_media         = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
@@ -1683,6 +1695,7 @@ pygame.event.pump()
 
 img_camara       = cargar_imagen("assets/Graphics/Camara.png", (60, 60))
 fondo            = cargar_imagen("assets/Graphics/fondo.png", (ANCHO, ALTO))
+fondo_menu       = cargar_imagen("assets/Graphics/Fondo-Menu.png", (ANCHO, ALTO))
 img_up           = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_up.png")
 img_down         = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_down.png")
 img_left         = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/keyboard_arrow_left.png")
@@ -1993,8 +2006,22 @@ def eventos_felicitacion(event):
     global estado_actual
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_SPACE:
+            sonido_felicitaciones.stop()
             _iniciar_nueva_partida_felicit()
         elif event.key in (pygame.K_m, pygame.K_ESCAPE):
+            sonido_felicitaciones.stop()
+            _guardar_sesion()
+            _resetear_partida_completa()
+            estado_actual = ESTADO_MENU
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.button in (4, 5):
+            return
+        pos = event.pos
+        if felicitacion_boton_jugar_rect.collidepoint(pos):
+            sonido_felicitaciones.stop()
+            _iniciar_nueva_partida_felicit()
+        elif felicitacion_boton_menu_rect.collidepoint(pos):
+            sonido_felicitaciones.stop()
             _guardar_sesion()
             _resetear_partida_completa()
             estado_actual = ESTADO_MENU
@@ -2048,6 +2075,33 @@ def _iniciar_nueva_partida_felicit():
     # Ir a tutorial 1 para empezar nueva partida
     tiempo_inicio_intermision1 = pygame.time.get_ticks()
     estado_actual = ESTADO_INTERMISION1
+
+
+# ---------------------------------------------------------------------------
+# Música
+# ---------------------------------------------------------------------------
+
+def actualizar_musica():
+    global _menu_musica_sonando, _juego_musica_sonando
+    if estado_actual in (ESTADO_MENU, ESTADO_INTERMISION1, ESTADO_INTERMISION2,
+                         ESTADO_INTERMISION3, ESTADO_REPORTE, ESTADO_PUNTAJES,
+                         ESTADO_ALBUM_PUNTAJES):
+        if not _menu_musica_sonando:
+            pygame.mixer.music.load("assets/Sonido/menu.ogg")
+            pygame.mixer.music.play(-1)
+            _menu_musica_sonando = True
+            _juego_musica_sonando = False
+    elif estado_actual in (ESTADO_INTERMISION4, ESTADO_JUGANDO):
+        if not _juego_musica_sonando:
+            pygame.mixer.music.load("assets/Sonido/juego.mp3")
+            pygame.mixer.music.play(-1)
+            _juego_musica_sonando = True
+            _menu_musica_sonando = False
+    else:
+        if _menu_musica_sonando or _juego_musica_sonando:
+            pygame.mixer.music.stop()
+            _menu_musica_sonando = False
+            _juego_musica_sonando = False
 
 
 # ---------------------------------------------------------------------------
@@ -2109,14 +2163,13 @@ while True:
                 estado_actual = ESTADO_INTERMISION4
 
         elif estado_actual == ESTADO_INTERMISION_PAUSA:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                fotos_reporte_instancias.clear()
-                pagina_actual = 0
-                fotos = FOTOS_INICIALES
-                estado_actual = ESTADO_REPORTE
+            pass
 
     # ---- Dibujo ----
-    pantalla.blit(fondo, (0, 0))
+    if estado_actual == ESTADO_MENU:
+        pantalla.blit(fondo_menu, (0, 0))
+    else:
+        pantalla.blit(fondo, (0, 0))
 
     if estado_actual == ESTADO_MENU:
         mostrar_menu()
@@ -2203,7 +2256,8 @@ while True:
         txt2 = fuente_normal.render(linea2, False, (255, 255, 255))
         pantalla.blit(txt1, txt1.get_rect(center=(ANCHO // 2, ALTO // 2 - 30)))
         pantalla.blit(txt2, txt2.get_rect(center=(ANCHO // 2, ALTO // 2 + 30)))
-        if t >= 2.5:
+        if t >= 4.0:
+            pygame.mixer.stop()
             fotos_reporte_instancias.clear()
             pagina_actual = 0
             fotos = FOTOS_INICIALES
@@ -2216,6 +2270,10 @@ while True:
         mostrar_puntos_partida()
 
         if tiempo_pausado:
+            if tipo_pausa == "objetivo":
+                sonido_objetivocompleto.play()
+            else:
+                sonido_gameover.play()
             tiempo_inicio_intermision_pausa = pygame.time.get_ticks()
             tiempo_pausado = False
             estado_actual = ESTADO_INTERMISION_PAUSA
@@ -2225,6 +2283,7 @@ while True:
             tiempo_restante = TIEMPO_INICIAL - t_transcurrido
             if tiempo_restante <= 0:
                 tipo_pausa = "tiempo"
+                sonido_gameover.play()
                 tiempo_inicio_intermision_pausa = pygame.time.get_ticks()
                 estado_actual = ESTADO_INTERMISION_PAUSA
             else:
@@ -2261,6 +2320,8 @@ while True:
 
     elif estado_actual == ESTADO_FELICITACION:
         mostrar_felicitacion()
+
+    actualizar_musica()
 
     pygame.display.update()
     clock.tick(60)
