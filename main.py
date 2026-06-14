@@ -893,7 +893,7 @@ def mostrar_album_puntajes():
     if pagina_actual_album >= total_paginas:
         pagina_actual_album = 0
 
-    titulo = fuente_titulo.render(f"Album de {album_puntajes_clave}", False, (255, 215, 0))
+    titulo = fuente_titulo.render(f"Álbum de {album_puntajes_clave}", False, (255, 215, 0))
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 110)))
     boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 40, ANCHO - 20)
 
@@ -1209,7 +1209,7 @@ def _blit_con_icono_mouse(texto):
 
 def dibujar_controles():
     ancla = (ANCHO // 2, int(ALTO / 1.3))
-    texto = fuente_normal.render("MUEVE LA CAMARA Y ENCUENTRA LOS PLANETAS", False, (255, 255, 255))
+    texto = fuente_normal.render("MUEVE LA CÁMARA Y ENCUENTRA LOS PLANETAS", False, (255, 255, 255))
     pantalla.blit(texto, texto.get_rect(midbottom=(ancla[0], ancla[1] - 80)))
     for t in datos_teclas:
         img_rect = t["img"].get_rect(center=(ancla[0] + t["offset"][0], ancla[1] + t["offset"][1]))
@@ -1907,7 +1907,7 @@ def mostrar_felicitacion():
     if not hasattr(mostrar_felicitacion, '_titulo'):
         mostrar_felicitacion._titulo = render_gradiente_texto(
             fuente_titulo_grande, "¡FELICIDADES!", (255, 215, 0), (200, 80, 255))
-        mostrar_felicitacion._sub = fuente_media.render("Completaste el album", False, (255, 255, 255))
+        mostrar_felicitacion._sub = fuente_media.render("Completaste el álbum", False, (255, 255, 255))
         titulo_tmp = mostrar_felicitacion._titulo
         mostrar_felicitacion._halo = pygame.Surface(
             (titulo_tmp.get_width() + 60, titulo_tmp.get_height() + 30), pygame.SRCALPHA)
