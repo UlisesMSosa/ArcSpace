@@ -1654,6 +1654,13 @@ def _resetear_partida_completa():
     global nombre_jugador, tipo_pausa, objetivo_completado
     global puntos_flotantes, objetivo_nivel5_inicial
 
+    # Detener sonidos que puedan haber quedado activos entre estados
+    sonido_gameover.stop()
+    sonido_felicitaciones.stop()
+    sonido_giro.stop()
+    sonido_revelada.stop()
+    sonido_objetivocompleto.stop()
+
     fotos_pegadas_permanentes.clear()
     album.clear()
     coleccion.clear()
@@ -1680,7 +1687,7 @@ clock = pygame.time.Clock()
 pantalla.fill((0, 0, 0))
 pygame.display.flip()
 
-pygame.mixer.init()
+pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
 sonido_camara           = pygame.mixer.Sound("assets/Sonido/camara.mp3")
 sonido_objetivocompleto = pygame.mixer.Sound("assets/Sonido/objetivocompleto.ogg")
 sonido_gameover         = pygame.mixer.Sound("assets/Sonido/gameover.mp3")
@@ -1689,6 +1696,17 @@ sonido_giro             = pygame.mixer.Sound("assets/Sonido/whoshfinal.mp3")
 sonido_revelada         = pygame.mixer.Sound("assets/Sonido/revelada.wav")
 sonido_pegado           = pygame.mixer.Sound("assets/Sonido/pegado.mp3")
 sonido_cambio_pagina    = pygame.mixer.Sound("assets/Sonido/Cambio-Pagina.wav")
+
+# Volúmenes normalizados para consistencia entre sistemas de audio
+sonido_camara.set_volume(0.6)
+sonido_objetivocompleto.set_volume(0.7)
+sonido_gameover.set_volume(0.7)
+sonido_felicitaciones.set_volume(0.6)
+sonido_giro.set_volume(0.5)
+sonido_revelada.set_volume(0.7)
+sonido_pegado.set_volume(0.6)
+sonido_cambio_pagina.set_volume(0.5)
+pygame.mixer.music.set_volume(0.4)
 _menu_musica_sonando    = False
 _juego_musica_sonando   = False
 
@@ -2041,14 +2059,6 @@ def eventos_felicitacion(event):
             _guardar_sesion()
             _resetear_partida_completa()
             estado_actual = ESTADO_MENU
-    if event.type == pygame.MOUSEBUTTONDOWN:
-        pos = event.pos
-        if felicitacion_boton_jugar_rect.collidepoint(pos):
-            _iniciar_nueva_partida_felicit()
-        elif felicitacion_boton_menu_rect.collidepoint(pos):
-            _guardar_sesion()
-            _resetear_partida_completa()
-            estado_actual = ESTADO_MENU
 
 
 def _iniciar_nueva_partida_felicit():
@@ -2273,7 +2283,8 @@ while True:
         pantalla.blit(txt1, txt1.get_rect(center=(ANCHO // 2, ALTO // 2 - 30)))
         pantalla.blit(txt2, txt2.get_rect(center=(ANCHO // 2, ALTO // 2 + 30)))
         if t >= 4.0:
-            pygame.mixer.stop()
+            sonido_gameover.stop()
+            sonido_objetivocompleto.stop()
             fotos_reporte_instancias.clear()
             pagina_actual = 0
             fotos = FOTOS_INICIALES
@@ -2286,6 +2297,7 @@ while True:
         mostrar_puntos_partida()
 
         if tiempo_pausado:
+            sonido_gameover.stop()  # evitar superposición si ya sonaba
             if tipo_pausa == "objetivo":
                 sonido_objetivocompleto.play()
             else:
@@ -2299,9 +2311,7 @@ while True:
             tiempo_restante = TIEMPO_INICIAL - t_transcurrido
             if tiempo_restante <= 0:
                 tipo_pausa = "tiempo"
-                sonido_gameover.play()
-                tiempo_inicio_intermision_pausa = pygame.time.get_ticks()
-                estado_actual = ESTADO_INTERMISION_PAUSA
+                tiempo_pausado = True  # pasa por el bloque anterior el próximo frame
             else:
                 mostrar_tiempo(tiempo_restante)
                 mostrar_camaras()

@@ -1091,6 +1091,30 @@
             ],
             "fecha_hora": "2026-06-01 18:45:40",
             "cantidad_partidas": 1
+        },
+        "ulise": {
+            "puntuacion_total": 19900,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Galaxia",
+                "Saturno",
+                "Mercurio",
+                "Neptuno",
+                "Jupiter",
+                "CometaHalley",
+                "Estrella",
+                "Estacion",
+                "Marte",
+                "Ovni",
+                "Luna",
+                "Venus",
+                "Urano",
+                "Nebulosa",
+                "Agujero De Gusano"
+            ],
+            "fecha_hora": "2026-06-14 07:19:55",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -2274,6 +2298,30 @@
                 "Agujero De Gusano"
             ],
             "fecha_hora": "2026-06-01 18:45:40"
+        },
+        {
+            "nombre": "ulise",
+            "puntuacion_total": 19900,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "AgujeroNegro",
+                "Galaxia",
+                "Saturno",
+                "Mercurio",
+                "Neptuno",
+                "Jupiter",
+                "CometaHalley",
+                "Estrella",
+                "Estacion",
+                "Marte",
+                "Ovni",
+                "Luna",
+                "Venus",
+                "Urano",
+                "Nebulosa",
+                "Agujero De Gusano"
+            ],
+            "fecha_hora": "2026-06-14 07:19:55"
         }
     ],
     "top_scores": [
@@ -2300,6 +2348,10 @@
         {
             "nombre": "ul",
             "puntos": 20000
+        },
+        {
+            "nombre": "ulise",
+            "puntos": 19900
         },
         {
             "nombre": "final?",
