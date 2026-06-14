@@ -1772,7 +1772,7 @@ assets_astros = {
     "Nebulosa":        cargar_imagen("assets/Graphics/Astros/Nebulosa.png",     (140, 140)),
     "Galaxia":         cargar_imagen("assets/Graphics/Astros/Galaxia.png",      (140, 140)),
     "Agujero De Gusano": cargar_imagen("assets/Graphics/Astros/Gusano.png",     (140, 140)),
-    "Ovni":            cargar_imagen("assets/Graphics/Astros/Ovni.png",         (140, 140)),
+    "Exoplaneta":      cargar_imagen("assets/Graphics/Astros/Exoplaneta.png",   (140, 140)),
 }
 assets_reales = {}
 _thumb_cache = {}  # clave -> surface escalada a 80×80 (proporcional)

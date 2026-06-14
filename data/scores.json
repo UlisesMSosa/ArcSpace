@@ -1115,6 +1115,30 @@
             ],
             "fecha_hora": "2026-06-14 07:19:55",
             "cantidad_partidas": 1
+        },
+        "exo": {
+            "puntuacion_total": 20100,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Marte",
+                "Estrella",
+                "Saturno",
+                "Neptuno",
+                "Agujero De Gusano",
+                "Urano",
+                "CometaHalley",
+                "Exoplaneta",
+                "Jupiter",
+                "AgujeroNegro",
+                "Estacion",
+                "Galaxia",
+                "Mercurio",
+                "Venus",
+                "Nebulosa",
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-14 07:58:58",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -2322,6 +2346,30 @@
                 "Agujero De Gusano"
             ],
             "fecha_hora": "2026-06-14 07:19:55"
+        },
+        {
+            "nombre": "exo",
+            "puntuacion_total": 20100,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Marte",
+                "Estrella",
+                "Saturno",
+                "Neptuno",
+                "Agujero De Gusano",
+                "Urano",
+                "CometaHalley",
+                "Exoplaneta",
+                "Jupiter",
+                "AgujeroNegro",
+                "Estacion",
+                "Galaxia",
+                "Mercurio",
+                "Venus",
+                "Nebulosa",
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-14 07:58:58"
         }
     ],
     "top_scores": [
@@ -2340,6 +2388,10 @@
         {
             "nombre": "vbm",
             "puntos": 20150
+        },
+        {
+            "nombre": "exo",
+            "puntos": 20100
         },
         {
             "nombre": "Claude",
