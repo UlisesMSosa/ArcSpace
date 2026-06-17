@@ -596,7 +596,7 @@
                 "Luna"
             ],
             "fecha_hora": "2026-05-29 18:55:51",
-            "cantidad_partidas": 1
+            "cantidad_partidas": 2
         },
         "ani": {
             "puntuacion_total": 17400,
@@ -1190,6 +1190,231 @@
                 "Estacion"
             ],
             "fecha_hora": "2026-06-17 16:29:56",
+            "cantidad_partidas": 1
+        },
+        "space": {
+            "puntuacion_total": 20700,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Mercurio",
+                "Nebulosa",
+                "Urano",
+                "CometaHalley",
+                "Jupiter",
+                "Saturno",
+                "Neptuno",
+                "Exoplaneta",
+                "Galaxia",
+                "Estacion",
+                "Venus",
+                "Agujero De Gusano",
+                "Luna",
+                "AgujeroNegro"
+            ],
+            "fecha_hora": "2026-06-17 16:40:06",
+            "cantidad_partidas": 1
+        },
+        "asdads": {
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 17:02:45",
+            "cantidad_partidas": 1
+        },
+        "es": {
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 17:02:57",
+            "cantidad_partidas": 1
+        },
+        "aver": {
+            "puntuacion_total": 300,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:06:03",
+            "cantidad_partidas": 1
+        },
+        ",": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "reve": {
+            "puntuacion_total": 19800,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Exoplaneta",
+                "Estrella",
+                "Urano",
+                "Estacion",
+                "Galaxia",
+                "Luna",
+                "Jupiter",
+                "Venus",
+                "AgujeroNegro",
+                "Neptuno",
+                "Saturno",
+                "Marte",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "CometaHalley"
+            ],
+            "fecha_hora": "2026-06-17 17:10:38",
+            "cantidad_partidas": 1
+        },
+        "averotra": {
+            "puntuacion_total": 1100,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella",
+                "Luna",
+                "Marte",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:12:42",
+            "cantidad_partidas": 1
+        },
+        "final??": {
+            "puntuacion_total": 20300,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Saturno",
+                "Luna",
+                "Venus",
+                "Neptuno",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Urano",
+                "AgujeroNegro",
+                "Marte",
+                "Estrella",
+                "Jupiter",
+                "Estacion",
+                "Exoplaneta",
+                "Galaxia",
+                "Mercurio"
+            ],
+            "fecha_hora": "2026-06-17 17:21:41",
+            "cantidad_partidas": 1
+        },
+        "est": {
+            "puntuacion_total": 300,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:23:59",
+            "cantidad_partidas": 1
+        },
+        "sdada": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "final???": {
+            "puntuacion_total": 20400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Neptuno",
+                "CometaHalley",
+                "AgujeroNegro",
+                "Exoplaneta",
+                "Luna",
+                "Mercurio",
+                "Nebulosa",
+                "Estrella",
+                "Venus",
+                "Jupiter",
+                "Urano",
+                "Estacion",
+                "Saturno",
+                "Galaxia",
+                "Agujero De Gusano",
+                "Marte"
+            ],
+            "fecha_hora": "2026-06-17 17:33:15",
+            "cantidad_partidas": 1
+        },
+        "rapido": {
+            "puntuacion_total": 19900,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Exoplaneta",
+                "Marte",
+                "Venus",
+                "Neptuno",
+                "Saturno",
+                "CometaHalley",
+                "AgujeroNegro",
+                "Luna",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Jupiter",
+                "Estacion",
+                "Nebulosa",
+                "Urano",
+                "Estrella",
+                "Galaxia"
+            ],
+            "fecha_hora": "2026-06-17 17:40:32",
+            "cantidad_partidas": 1
+        },
+        "medico": {
+            "puntuacion_total": 20400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Neptuno",
+                "Jupiter",
+                "Estrella",
+                "AgujeroNegro",
+                "Saturno",
+                "Exoplaneta",
+                "Luna",
+                "Mercurio",
+                "Estacion",
+                "Galaxia",
+                "Urano",
+                "Venus",
+                "Marte",
+                "Agujero De Gusano",
+                "Nebulosa"
+            ],
+            "fecha_hora": "2026-06-17 17:44:21",
+            "cantidad_partidas": 1
+        },
+        "asdad": {
+            "puntuacion_total": 300,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:45:49",
+            "cantidad_partidas": 1
+        },
+        "asdasgde": {
+            "puntuacion_total": 500,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion",
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 17:46:21",
             "cantidad_partidas": 1
         }
     },
@@ -2474,12 +2699,256 @@
                 "Estacion"
             ],
             "fecha_hora": "2026-06-17 16:29:56"
+        },
+        {
+            "nombre": "space",
+            "puntuacion_total": 20700,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Estrella",
+                "Marte",
+                "Mercurio",
+                "Nebulosa",
+                "Urano",
+                "CometaHalley",
+                "Jupiter",
+                "Saturno",
+                "Neptuno",
+                "Exoplaneta",
+                "Galaxia",
+                "Estacion",
+                "Venus",
+                "Agujero De Gusano",
+                "Luna",
+                "AgujeroNegro"
+            ],
+            "fecha_hora": "2026-06-17 16:40:06"
+        },
+        {
+            "nombre": "asdads",
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 17:02:45"
+        },
+        {
+            "nombre": "es",
+            "puntuacion_total": 200,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 17:02:57"
+        },
+        {
+            "nombre": "aver",
+            "puntuacion_total": 300,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:06:03"
+        },
+        {
+            "nombre": ",",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-06-17 17:06:04"
+        },
+        {
+            "nombre": "reve",
+            "puntuacion_total": 19800,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Exoplaneta",
+                "Estrella",
+                "Urano",
+                "Estacion",
+                "Galaxia",
+                "Luna",
+                "Jupiter",
+                "Venus",
+                "AgujeroNegro",
+                "Neptuno",
+                "Saturno",
+                "Marte",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "CometaHalley"
+            ],
+            "fecha_hora": "2026-06-17 17:10:38"
+        },
+        {
+            "nombre": "averotra",
+            "puntuacion_total": 1100,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella",
+                "Luna",
+                "Marte",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:12:42"
+        },
+        {
+            "nombre": "final??",
+            "puntuacion_total": 20300,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Saturno",
+                "Luna",
+                "Venus",
+                "Neptuno",
+                "Agujero De Gusano",
+                "Nebulosa",
+                "Urano",
+                "AgujeroNegro",
+                "Marte",
+                "Estrella",
+                "Jupiter",
+                "Estacion",
+                "Exoplaneta",
+                "Galaxia",
+                "Mercurio"
+            ],
+            "fecha_hora": "2026-06-17 17:21:41"
+        },
+        {
+            "nombre": "est",
+            "puntuacion_total": 300,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:23:59"
+        },
+        {
+            "nombre": "sdada",
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-06-17 17:25:53"
+        },
+        {
+            "nombre": "final???",
+            "puntuacion_total": 20400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Neptuno",
+                "CometaHalley",
+                "AgujeroNegro",
+                "Exoplaneta",
+                "Luna",
+                "Mercurio",
+                "Nebulosa",
+                "Estrella",
+                "Venus",
+                "Jupiter",
+                "Urano",
+                "Estacion",
+                "Saturno",
+                "Galaxia",
+                "Agujero De Gusano",
+                "Marte"
+            ],
+            "fecha_hora": "2026-06-17 17:33:15"
+        },
+        {
+            "nombre": "rapido",
+            "puntuacion_total": 19900,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Exoplaneta",
+                "Marte",
+                "Venus",
+                "Neptuno",
+                "Saturno",
+                "CometaHalley",
+                "AgujeroNegro",
+                "Luna",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Jupiter",
+                "Estacion",
+                "Nebulosa",
+                "Urano",
+                "Estrella",
+                "Galaxia"
+            ],
+            "fecha_hora": "2026-06-17 17:40:32"
+        },
+        {
+            "nombre": "medico",
+            "puntuacion_total": 20400,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Neptuno",
+                "Jupiter",
+                "Estrella",
+                "AgujeroNegro",
+                "Saturno",
+                "Exoplaneta",
+                "Luna",
+                "Mercurio",
+                "Estacion",
+                "Galaxia",
+                "Urano",
+                "Venus",
+                "Marte",
+                "Agujero De Gusano",
+                "Nebulosa"
+            ],
+            "fecha_hora": "2026-06-17 17:44:21"
+        },
+        {
+            "nombre": "uli",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-06-17 17:44:31"
+        },
+        {
+            "nombre": "asdad",
+            "puntuacion_total": 300,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 17:45:49"
+        },
+        {
+            "nombre": "asdasgde",
+            "puntuacion_total": 500,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estacion",
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 17:46:21"
         }
     ],
     "top_scores": [
         {
+            "nombre": "space",
+            "puntos": 20700
+        },
+        {
             "nombre": "asdasd",
             "puntos": 20550
+        },
+        {
+            "nombre": "final???",
+            "puntos": 20400
+        },
+        {
+            "nombre": "medico",
+            "puntos": 20400
         },
         {
             "nombre": "asdasds",
@@ -2487,6 +2956,10 @@
         },
         {
             "nombre": "cin",
+            "puntos": 20300
+        },
+        {
+            "nombre": "final??",
             "puntos": 20300
         },
         {
@@ -2508,6 +2981,14 @@
         {
             "nombre": "ulise",
             "puntos": 19900
+        },
+        {
+            "nombre": "rapido",
+            "puntos": 19900
+        },
+        {
+            "nombre": "reve",
+            "puntos": 19800
         },
         {
             "nombre": "falta",
@@ -2678,6 +3159,10 @@
             "puntos": 1100
         },
         {
+            "nombre": "averotra",
+            "puntos": 1100
+        },
+        {
             "nombre": "hguqub",
             "puntos": 1000
         },
@@ -2718,6 +3203,10 @@
             "puntos": 500
         },
         {
+            "nombre": "asdasgde",
+            "puntos": 500
+        },
+        {
             "nombre": "ulises",
             "puntos": 400
         },
@@ -2728,6 +3217,18 @@
         {
             "nombre": "asdasasfd",
             "puntos": 400
+        },
+        {
+            "nombre": "aver",
+            "puntos": 300
+        },
+        {
+            "nombre": "est",
+            "puntos": 300
+        },
+        {
+            "nombre": "asdad",
+            "puntos": 300
         },
         {
             "nombre": "yhe",
@@ -2747,6 +3248,14 @@
         },
         {
             "nombre": "asdx",
+            "puntos": 200
+        },
+        {
+            "nombre": "asdads",
+            "puntos": 200
+        },
+        {
+            "nombre": "es",
             "puntos": 200
         },
         {
@@ -2791,6 +3300,14 @@
         },
         {
             "nombre": "Ulise",
+            "puntos": 0
+        },
+        {
+            "nombre": ",",
+            "puntos": 0
+        },
+        {
+            "nombre": "sdada",
             "puntos": 0
         }
     ]

@@ -79,7 +79,7 @@ def escalar_rellenar(image, target_w, target_h):
     iw, ih = image.get_size()
     escala = max(target_w / iw, target_h / ih)
     nw, nh = int(iw * escala), int(ih * escala)
-    scaled = pygame.transform.scale(image, (nw, nh))
+    scaled = pygame.transform.smoothscale(image, (nw, nh))
     cx, cy = (nw - target_w) // 2, (nh - target_h) // 2
     return scaled.subsurface((cx, cy, target_w, target_h)).copy()
 
@@ -460,11 +460,11 @@ class FotoReporte(pygame.sprite.Sprite):
             self.rect   = self.image.get_rect(center=self._pegando_end_center)
             self.estado = 'pegada'
         else:
-            self.image = pygame.transform.scale(self.superficie_real, (w, h))
+            self.image = pygame.transform.smoothscale(self.superficie_real, (w, h))
             self.rect  = self.image.get_rect(center=(int(cx), int(cy)))
 
     def revelar_ampliado(self):
-        self.image  = pygame.transform.scale(self.superficie_real, self.tamanio_anim)
+        self.image  = pygame.transform.smoothscale(self.superficie_real, self.tamanio_anim)
         self.rect   = self.image.get_rect(center=(ANCHO // 2, ALTO // 2))
         self.estado = 'revelada'
 
@@ -1193,13 +1193,23 @@ def _dibujar_instruccion_reporte():
         pantalla.blit(texto, texto.get_rect(left=start_x, centery=140))
         pantalla.blit(img_sp, img_sp.get_rect(left=start_x + texto.get_width() + 8, centery=140))
     elif hay_revelada:
-        texto = fuente_normal.render("Haz click sobre la imagen para pegarla en el album",
-                                     False, color_pulsante())
-        _blit_con_icono_mouse(texto)
+        t_left  = fuente_normal.render("Presiona", False, color_pulsante())
+        t_right = fuente_normal.render("para pegar en el album", False, color_pulsante())
+        img_sp  = img_space_inst
+        total_w = t_left.get_width() + 8 + img_sp.get_width() + 8 + t_right.get_width()
+        x = (ANCHO - total_w) // 2
+        pantalla.blit(t_left,  t_left.get_rect(left=x, centery=140))
+        pantalla.blit(img_sp,  img_sp.get_rect(left=x + t_left.get_width() + 8, centery=140))
+        pantalla.blit(t_right, t_right.get_rect(left=x + t_left.get_width() + 8 + img_sp.get_width() + 8, centery=140))
     else:
-        texto = fuente_normal.render("Haz click sobre las fotos para revelarlas",
-                                     False, color_pulsante())
-        _blit_con_icono_mouse(texto)
+        t_left  = fuente_normal.render("Presiona", False, color_pulsante())
+        t_right = fuente_normal.render("para revelar", False, color_pulsante())
+        img_sp  = img_space_inst
+        total_w = t_left.get_width() + 8 + img_sp.get_width() + 8 + t_right.get_width()
+        x = (ANCHO - total_w) // 2
+        pantalla.blit(t_left,  t_left.get_rect(left=x, centery=140))
+        pantalla.blit(img_sp,  img_sp.get_rect(left=x + t_left.get_width() + 8, centery=140))
+        pantalla.blit(t_right, t_right.get_rect(left=x + t_left.get_width() + 8 + img_sp.get_width() + 8, centery=140))
 
 
 def _blit_con_icono_mouse(texto):
@@ -1577,6 +1587,21 @@ def eventos_reporte(event):
                 pag_slide_solicitada = 1; sonido_cambio_pagina.play()
 
     if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_SPACE:
+            # Pegar foto ya revelada (como el click)
+            for f in todas_fotos:
+                if f.estado == 'revelada':
+                    f.pegar()
+                    if f in fotos_reporte_instancias:
+                        pos_idx = next((a.get("posicion") for a in astros if a["nombre"] == f.clave), None)
+                        if pos_idx is not None:
+                            pag, slot = obtener_pagina_slot(pos_idx)
+                            entrada = (f.clave, pag, slot)
+                            if entrada not in fotos_pegadas_permanentes:
+                                fotos_pegadas_permanentes.append(entrada)
+                            pagina_actual = pag
+                    return
+
         if hay_transicion or hay_slide:
             return  # Bloquear teclado mientras hay animación
 
@@ -1747,14 +1772,14 @@ img_mouse_left   = cargar_imagen("assets/Graphics/Keyboard & Mouse/Default/mouse
 img_uibook       = cargar_imagen("assets/Graphics/UIBook.png", (830, 500))
 img_nacional     = escalar_proporcional(cargar_imagen("assets/Graphics/Nacional.png"), 32, 32)
 
-_space_raw       = cargar_imagen("assets/Graphics/Keyboard & Mouse/Double/keyboard_space.png")
-img_space        = _space_raw.subsurface((0, 36, 128, 56)).copy()
+img_space        = cargar_imagen("assets/Graphics/Keyboard & Mouse/espacio-key.png")
+img_space        = escalar_proporcional(img_space, 128, 56)
 
 img_arrow_l      = pygame.transform.scale(img_left, (50, 50))
 img_arrow_r      = pygame.transform.scale(img_right, (50, 50))
 img_m_icon       = pygame.transform.scale(img_m, (30, 30))
 img_mouse_icon   = pygame.transform.scale(img_mouse_left, (30, 38))
-img_space_inst   = pygame.transform.scale(img_space, (96, 42))
+img_space_inst   = escalar_proporcional(img_space, 96, 42)
 img_camara_icon  = pygame.transform.scale(img_camara, (50, 50))
 
 datos_teclas = [
@@ -1769,12 +1794,12 @@ assets_astros = {
     "Venus":           cargar_imagen("assets/Graphics/Astros/Venus.png",        (140, 140)),
     "Mercurio":        cargar_imagen("assets/Graphics/Astros/Mercurio.png",     (140, 140)),
     "Marte":           cargar_imagen("assets/Graphics/Astros/Marte.png",        (140, 140)),
-    "Estacion":        cargar_imagen("assets/Graphics/Astros/Estacion.png",     (80,   80)),
+    "Estacion":        cargar_imagen("assets/Graphics/Astros/Estacion.png",      (120,  75)),
     "Jupiter":         cargar_imagen("assets/Graphics/Astros/Jupiter.png",      (140, 140)),
-    "Saturno":         cargar_imagen("assets/Graphics/Astros/Saturno.png",      (140,  84)),
+    "Saturno":         cargar_imagen("assets/Graphics/Astros/Saturno.png",      (140,  76)),
     "Urano":           cargar_imagen("assets/Graphics/Astros/Urano.png",        (140, 140)),
     "Neptuno":         cargar_imagen("assets/Graphics/Astros/Neptuno.png",      (140, 140)),
-    "Estrella":        cargar_imagen("assets/Graphics/Astros/Estrella.png",     (45,   45)),
+    "Estrella":        cargar_imagen("assets/Graphics/Astros/Estrella.png",     (45,   42)),
     "CometaHalley":    cargar_imagen("assets/Graphics/Astros/Cometa.png",       (140, 140)),
     "AgujeroNegro":    cargar_imagen("assets/Graphics/Astros/Agujero.png",      (140,  76)),
     "Nebulosa":        cargar_imagen("assets/Graphics/Astros/Nebulosa.png",     (140, 140)),
