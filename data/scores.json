@@ -1139,6 +1139,58 @@
             ],
             "fecha_hora": "2026-06-14 07:58:58",
             "cantidad_partidas": 1
+        },
+        "Ulise": {
+            "puntuacion_total": 0,
+            "nivel_maximo": 0,
+            "astros_descubiertos": [],
+            "fecha_hora": "",
+            "cantidad_partidas": 1
+        },
+        "falta": {
+            "puntuacion_total": 19500,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Agujero De Gusano",
+                "Jupiter",
+                "Marte",
+                "AgujeroNegro",
+                "Galaxia",
+                "Exoplaneta",
+                "Saturno",
+                "Urano",
+                "Luna",
+                "Estrella",
+                "Nebulosa",
+                "Mercurio",
+                "CometaHalley",
+                "Venus",
+                "Estacion",
+                "Neptuno"
+            ],
+            "fecha_hora": "2026-06-17 16:22:11",
+            "cantidad_partidas": 1
+        },
+        "puntos": {
+            "puntuacion_total": 1100,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella",
+                "Estacion",
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 16:28:21",
+            "cantidad_partidas": 1
+        },
+        "punto": {
+            "puntuacion_total": 700,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Marte",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 16:29:56",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -2370,6 +2422,58 @@
                 "Luna"
             ],
             "fecha_hora": "2026-06-14 07:58:58"
+        },
+        {
+            "nombre": "Ulise",
+            "puntuacion_total": 0,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [],
+            "fecha_hora": "2026-06-14 08:10:34"
+        },
+        {
+            "nombre": "falta",
+            "puntuacion_total": 19500,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Agujero De Gusano",
+                "Jupiter",
+                "Marte",
+                "AgujeroNegro",
+                "Galaxia",
+                "Exoplaneta",
+                "Saturno",
+                "Urano",
+                "Luna",
+                "Estrella",
+                "Nebulosa",
+                "Mercurio",
+                "CometaHalley",
+                "Venus",
+                "Estacion",
+                "Neptuno"
+            ],
+            "fecha_hora": "2026-06-17 16:22:11"
+        },
+        {
+            "nombre": "puntos",
+            "puntuacion_total": 1100,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Estrella",
+                "Estacion",
+                "Luna"
+            ],
+            "fecha_hora": "2026-06-17 16:28:21"
+        },
+        {
+            "nombre": "punto",
+            "puntuacion_total": 700,
+            "nivel_maximo": 1,
+            "astros_descubiertos": [
+                "Marte",
+                "Estacion"
+            ],
+            "fecha_hora": "2026-06-17 16:29:56"
         }
     ],
     "top_scores": [
@@ -2404,6 +2508,10 @@
         {
             "nombre": "ulise",
             "puntos": 19900
+        },
+        {
+            "nombre": "falta",
+            "puntos": 19500
         },
         {
             "nombre": "final?",
@@ -2566,6 +2674,10 @@
             "puntos": 1100
         },
         {
+            "nombre": "puntos",
+            "puntos": 1100
+        },
+        {
             "nombre": "hguqub",
             "puntos": 1000
         },
@@ -2584,6 +2696,10 @@
         {
             "nombre": "punt",
             "puntos": 800
+        },
+        {
+            "nombre": "punto",
+            "puntos": 700
         },
         {
             "nombre": "sadsa",
@@ -2671,6 +2787,10 @@
         },
         {
             "nombre": "aspoqm",
+            "puntos": 0
+        },
+        {
+            "nombre": "Ulise",
             "puntos": 0
         }
     ]

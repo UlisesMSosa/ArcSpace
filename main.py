@@ -132,9 +132,9 @@ def dibujar_rect_punteado(superficie, color, rect, dash=8):
 _glow_cache: dict = {}
 
 def dibujar_boton(pantalla, fuente, texto, rect_base, y_center, right_edge=None,
-                  color_fondo=(100, 0, 180), left_edge=None):
+                  color_fondo=(100, 0, 180), left_edge=None, color_texto=(255, 255, 255)):
     """Dibuja un botón con hover y glow. Devuelve el rect final del botón."""
-    surf_base = fuente.render(texto, False, (255, 255, 255))
+    surf_base = fuente.render(texto, False, color_texto)
     if left_edge is not None:
         r = surf_base.get_rect(left=left_edge, centery=y_center)
     else:
@@ -746,12 +746,12 @@ def mostrar_menu():
     t = pygame.time.get_ticks() / 1000
 
     # Título flotante dorado
-    titulo = fuente_titulo_grande.render("ArcSpace", False, (255, 215, 0))
+    titulo = fuente_titulo_grande.render("ARCSPACE", False, (232, 232, 56))
     float_y = int(ALTO // 8 + math.sin(t * 1.4) * 6)
     titulo_rect = titulo.get_rect(center=(ANCHO // 2, float_y))
     pantalla.blit(titulo, titulo_rect)
 
-    label = fuente_media.render("INGRESA TU NOMBRE", False, (245, 55, 42))
+    label = fuente_menu_media.render("INGRESA TU NOMBRE", False, (242, 132, 15))
     pantalla.blit(label, label.get_rect(center=(ANCHO // 2, ALTO // 2)))
 
     # Guiones vacíos debajo del nombre con letras superpuestas
@@ -786,24 +786,28 @@ def mostrar_menu():
 
     # "PRESIONE ESPACIO" con pulso de escala (la base se cachea, solo se re-escala)
     pulse = 1.0 + 0.04 * math.sin(t * 3.0)
-    if not hasattr(mostrar_menu, '_surf_instruccion') or mostrar_menu._surf_color_actual != (245, 55, 42):
-        mostrar_menu._surf_instruccion = fuente_media.render(
-            "PRESIONE ESPACIO PARA INICIAR", False, (245, 55, 42))
-        mostrar_menu._surf_color_actual = (245, 55, 42)
+    if not hasattr(mostrar_menu, '_surf_instruccion') or mostrar_menu._surf_color_actual != (242, 132, 15):
+        mostrar_menu._surf_instruccion = fuente_menu_media.render(
+            "PRESIONE ESPACIO PARA INICIAR", False, (242, 132, 15))
+        mostrar_menu._surf_color_actual = (242, 132, 15)
     base_surf = mostrar_menu._surf_instruccion
     w, h = int(base_surf.get_width() * pulse), int(base_surf.get_height() * pulse)
     instruccion = pygame.transform.scale(base_surf, (w, h))
     pantalla.blit(instruccion, instruccion.get_rect(center=(ANCHO // 2, ALTO // 2 + 140)))
 
     boton_salir_rect = dibujar_boton(pantalla, fuente_normal, "SALIR (ESC)",
-                                     None, titulo_rect.centery, ANCHO - 20)
+                                     None, titulo_rect.centery, ANCHO - 20,
+                                     color_fondo=(99, 207, 194),
+                                     color_texto=(0, 0, 0))
     boton_puntajes_rect = dibujar_boton(pantalla, fuente_normal, "PUNTAJES",
                                         None, titulo_rect.centery, ANCHO - 20,
-                                        left_edge=20)
+                                        left_edge=20,
+                                        color_fondo=(99, 207, 194),
+                                        color_texto=(0, 0, 0))
 
     if nombre_erroneo:
-        err = fuente_pequena.render("YA EXISTE UN JUGADOR CON ESE NOMBRE", False, (255, 0, 0))
-        pantalla.blit(err, err.get_rect(center=(ANCHO // 2, ALTO - 80)))
+        err = fuente_menu_media.render("YA EXISTE UN JUGADOR CON ESE NOMBRE", False, (255, 0, 0))
+        pantalla.blit(err, err.get_rect(center=(ANCHO // 2, ALTO - 130)))
 
     creado = fuente_pequena.render("Creado por Ulises Sosa", False, (255, 215, 0))
     cr = creado.get_rect(center=(ANCHO // 2, ALTO - 20))
@@ -817,7 +821,8 @@ def mostrar_puntajes():
 
     titulo = fuente_titulo.render("PUNTAJES", False, (255, 255, 255))
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 50)))
-    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 50, ANCHO - 20)
+    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 50, ANCHO - 20,
+                                      color_fondo=(99, 207, 194), color_texto=(0, 0, 0))
 
     y_inicio, alto_entrada = 110, 80
     area_y    = ALTO - y_inicio - 20
@@ -895,7 +900,8 @@ def mostrar_album_puntajes():
 
     titulo = fuente_titulo.render(f"Álbum de {album_puntajes_clave}", False, (255, 215, 0))
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 110)))
-    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 40, ANCHO - 20)
+    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 40, ANCHO - 20,
+                                      color_fondo=(99, 207, 194), color_texto=(0, 0, 0))
 
     img_uibook_rect = img_uibook.get_rect(center=(ANCHO // 2, 420))
     pantalla.blit(img_uibook, img_uibook_rect)
@@ -1683,6 +1689,7 @@ def _resetear_partida_completa():
 pygame.init()
 pantalla = pygame.display.set_mode((ANCHO, ALTO), pygame.FULLSCREEN | pygame.SCALED)
 pygame.display.set_caption("ArcSpace")
+pygame.display.set_icon(cargar_imagen("assets/Graphics/Logo.png", (32, 32)))
 clock = pygame.time.Clock()
 pantalla.fill((0, 0, 0))
 pygame.display.flip()
@@ -1710,12 +1717,13 @@ pygame.mixer.music.set_volume(0.4)
 _menu_musica_sonando    = False
 _juego_musica_sonando   = False
 
-fuente_titulo_grande = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 110)
+fuente_titulo_grande = pygame.font.Font("assets/Fonts/Audiowide,Lato/Audiowide/Audiowide-Regular.ttf", 120)
 fuente_titulo        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
 fuente_media         = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
+fuente_menu_media    = pygame.font.Font("assets/Fonts/Audiowide,Lato/Audiowide/Audiowide-Regular.ttf", 50)
 fuente_normal        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
 fuente_pequena       = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 20)
-fuente_puntos        = pygame.font.Font("assets/Fonts/Lato/Lato-Thin.ttf", 20)
+fuente_puntos        = pygame.font.Font("assets/Fonts/Audiowide,Lato/Lato/Lato-Thin.ttf", 20)
 
 # Pantalla de carga
 carga = fuente_normal.render("Cargando...", False, (255, 255, 255))
