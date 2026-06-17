@@ -34,11 +34,16 @@ TIEMPO_INICIAL      = 60
 
 
 def objetivo_nivel5():
+    # NOTA: depende de las globales `album`, `coleccion` y `astros`, definidas
+    # más abajo (sección "Estado global del juego" / "Datos"). Es válido porque
+    # Python resuelve los nombres recién al *llamar* la función, no al definirla,
+    # pero por eso esta función NUNCA debe invocarse antes de esa inicialización.
     fotografiados = set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion)
     return sum(a["puntos"] * a.get("cantidad", 1) for a in astros if a["nombre"] not in fotografiados)
 
 
 def objetivo_actual():
+    # NOTA: depende de la global `nivel`, definida más abajo. Ver nota en objetivo_nivel5().
     return objetivo_nivel5() if nivel == 5 else OBJETIVOS_POR_NIVEL[nivel]
 
 FOTOS_INICIALES     = 5
@@ -76,6 +81,7 @@ def escalar_proporcional(image, target_w, target_h):
 
 
 def escalar_rellenar(image, target_w, target_h):
+    target_w, target_h = max(int(target_w), 1), max(int(target_h), 1)
     iw, ih = image.get_size()
     escala = max(target_w / iw, target_h / ih)
     nw = max(int(iw * escala), target_w)
@@ -106,7 +112,12 @@ def render_gradiente_texto(fuente, texto, color1, color2):
 
 
 def cargar_imagen(ruta, escala=None):
-    img = pygame.image.load(ruta)
+    try:
+        img = pygame.image.load(ruta)
+    except (FileNotFoundError, pygame.error) as e:
+        print(f"ERROR: No se pudo cargar la imagen '{ruta}': {e}")
+        pygame.quit()
+        exit(1)
     # convert_alpha() es seguro para cualquier imagen; convert() es más rápido
     # para imágenes sin transparencia, pero get_flags() no es confiable antes
     # del primer blit. Usar la extensión como heurística fiable.
@@ -118,6 +129,26 @@ def cargar_imagen(ruta, escala=None):
     if escala:
         img = pygame.transform.scale(img, escala)
     return img
+
+
+def cargar_fuente_segura(ruta, tamanio):
+    """Carga una fuente con manejo de error consistente con cargar_imagen()."""
+    try:
+        return pygame.font.Font(ruta, tamanio)
+    except (FileNotFoundError, pygame.error) as e:
+        print(f"ERROR: No se pudo cargar la fuente '{ruta}': {e}")
+        pygame.quit()
+        exit(1)
+
+
+def cargar_sonido_seguro(ruta):
+    """Carga un sonido con manejo de error consistente con cargar_imagen()."""
+    try:
+        return pygame.mixer.Sound(ruta)
+    except (FileNotFoundError, pygame.error) as e:
+        print(f"ERROR: No se pudo cargar el sonido '{ruta}': {e}")
+        pygame.quit()
+        exit(1)
 
 
 def dibujar_rect_punteado(superficie, color, rect, dash=8):
@@ -246,7 +277,7 @@ class Camara(pygame.sprite.Sprite):
         self.tiempo_foto         = 0
 
         # Fuente cargada una sola vez (no en cada frame dentro de _render)
-        self._fuente_foto = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 32)
+        self._fuente_foto = cargar_fuente_segura("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 32)
 
         # Superficies de anillos de sonar precalculadas: se reusan cada frame,
         # solo se actualiza su alpha en lugar de crear nuevas Surface.
@@ -485,6 +516,9 @@ def crear_astros():
     if total > len(disponibles):
         # Más astros que posiciones disponibles: usar todas las disponibles
         # (puede ocurrir si se acumulan astros de rondas anteriores)
+        print(f"AVISO: nivel {nivel} requiere {total} posiciones pero solo "
+              f"hay {len(disponibles)} disponibles; se omitirán "
+              f"{total - len(disponibles)} astro(s).")
         posiciones = disponibles[:]
         random.shuffle(posiciones)
     else:
@@ -542,6 +576,15 @@ def limpiar_atributos_tutorial(camara_sprite, *attrs):
             delattr(camara_sprite, a)
 
 
+def salir_juego():
+    """Guarda la puntuación (si hay jugador) y cierra el juego.
+    Centraliza el patrón repetido de ESC / botón salir / cierre de ventana."""
+    if nombre_jugador:
+        guardar_puntuacion()
+    pygame.quit()
+    exit()
+
+
 # ---------------------------------------------------------------------------
 # Persistencia
 # ---------------------------------------------------------------------------
@@ -554,13 +597,10 @@ def cargar_scores():
         return {"jugadores": {}, "partidas": [], "top_scores": []}
 
 
-def guardar_puntuacion():
-    global scores
-    datos    = cargar_scores()
-    ahora    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    punt_total = puntuacion_total_partida + puntuacion
-    descubiertos = list(set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion))
-
+def _registrar_resultado_jugador(datos, punt_total, nivel_max, descubiertos, ahora):
+    """Actualiza (in-place) el registro de `nombre_jugador` en `datos` si
+    `punt_total` supera su mejor puntuación histórica, y agrega la entrada
+    de esta partida al historial. No escribe a disco (ver _persistir_scores)."""
     if nombre_jugador not in datos["jugadores"]:
         datos["jugadores"][nombre_jugador] = {
             "puntuacion_total": 0, "nivel_maximo": 0,
@@ -569,23 +609,37 @@ def guardar_puntuacion():
     p = datos["jugadores"][nombre_jugador]
     p["cantidad_partidas"] += 1
     if punt_total > p["puntuacion_total"]:
-        p["puntuacion_total"]     = punt_total
-        p["nivel_maximo"]         = nivel
-        p["astros_descubiertos"]  = descubiertos
-        p["fecha_hora"]           = ahora
+        p["puntuacion_total"]    = punt_total
+        p["nivel_maximo"]        = nivel_max
+        p["astros_descubiertos"] = descubiertos
+        p["fecha_hora"]          = ahora
 
     datos["partidas"].append({
         "nombre": nombre_jugador, "puntuacion_total": punt_total,
-        "nivel_maximo": nivel, "astros_descubiertos": descubiertos, "fecha_hora": ahora,
+        "nivel_maximo": nivel_max, "astros_descubiertos": descubiertos, "fecha_hora": ahora,
     })
     sorted_p = sorted(datos["jugadores"].items(), key=lambda x: x[1]["puntuacion_total"], reverse=True)
     datos["top_scores"] = [{"nombre": k, "puntos": v["puntuacion_total"]} for k, v in sorted_p]
 
+
+def _persistir_scores(datos, contexto):
+    """Escribe `datos` a data/scores.json. `contexto` se usa solo en el mensaje de error."""
     try:
         with open('data/scores.json', 'w') as f:
             json.dump(datos, f, indent=4)
     except OSError:
-        print("ERROR: No se pudo guardar la puntuación")
+        print(f"ERROR: No se pudo guardar {contexto}")
+
+
+def guardar_puntuacion():
+    global scores
+    datos    = cargar_scores()
+    ahora    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    punt_total = puntuacion_total_partida + puntuacion
+    descubiertos = list(set(a["nombre"] for a in album) | set(a["nombre"] for a in coleccion))
+
+    _registrar_resultado_jugador(datos, punt_total, nivel, descubiertos, ahora)
+    _persistir_scores(datos, "la puntuación")
 
 
 def cargar_assets_reales():
@@ -1359,10 +1413,7 @@ def eventos_menu(event):
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
-            if nombre_jugador:
-                guardar_puntuacion()
-            pygame.quit()
-            exit()
+            salir_juego()
         if event.key in (pygame.K_SPACE, pygame.K_RETURN):
             if nombre_jugador and nombre_jugador.lower() not in nombres_existentes:
                 tiempo_inicio_intermision1 = pygame.time.get_ticks()
@@ -1396,10 +1447,7 @@ def eventos_menu(event):
             scroll_offset = 0
             estado_actual = ESTADO_PUNTAJES
         if boton_salir_rect.collidepoint(event.pos):
-            if nombre_jugador:
-                guardar_puntuacion()
-            pygame.quit()
-            exit()
+            salir_juego()
 
 
 def eventos_puntajes(event):
@@ -1489,7 +1537,7 @@ def eventos_jugando(event):
     global fotos, flash_activo, flash_tiempo, puntuacion, puntuacion_total_partida
     global tiempo_pausado, tipo_pausa
 
-    if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not tiempo_pausado:
+    if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not tiempo_pausado and fotos > 0:
         fotos -= 1
         flash_activo, flash_tiempo = True, pygame.time.get_ticks()
         p = tomar_foto()
@@ -1714,14 +1762,14 @@ pantalla.fill((0, 0, 0))
 pygame.display.flip()
 
 pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
-sonido_camara           = pygame.mixer.Sound("assets/Sonido/camara.mp3")
-sonido_objetivocompleto = pygame.mixer.Sound("assets/Sonido/objetivocompleto.ogg")
-sonido_gameover         = pygame.mixer.Sound("assets/Sonido/gameover.mp3")
-sonido_felicitaciones   = pygame.mixer.Sound("assets/Sonido/felicitaciones.mp3")
-sonido_giro             = pygame.mixer.Sound("assets/Sonido/whoshfinal.mp3")
-sonido_revelada         = pygame.mixer.Sound("assets/Sonido/revelada.wav")
-sonido_pegado           = pygame.mixer.Sound("assets/Sonido/pegado.mp3")
-sonido_cambio_pagina    = pygame.mixer.Sound("assets/Sonido/Cambio-Pagina.wav")
+sonido_camara           = cargar_sonido_seguro("assets/Sonido/camara.mp3")
+sonido_objetivocompleto = cargar_sonido_seguro("assets/Sonido/objetivocompleto.ogg")
+sonido_gameover         = cargar_sonido_seguro("assets/Sonido/gameover.mp3")
+sonido_felicitaciones   = cargar_sonido_seguro("assets/Sonido/felicitaciones.mp3")
+sonido_giro             = cargar_sonido_seguro("assets/Sonido/whoshfinal.mp3")
+sonido_revelada         = cargar_sonido_seguro("assets/Sonido/revelada.wav")
+sonido_pegado           = cargar_sonido_seguro("assets/Sonido/pegado.mp3")
+sonido_cambio_pagina    = cargar_sonido_seguro("assets/Sonido/Cambio-Pagina.wav")
 
 # Volúmenes normalizados para consistencia entre sistemas de audio
 sonido_camara.set_volume(0.6)
@@ -1736,13 +1784,13 @@ pygame.mixer.music.set_volume(0.4)
 _menu_musica_sonando    = False
 _juego_musica_sonando   = False
 
-fuente_titulo_grande = pygame.font.Font("assets/Fonts/Audiowide,Lato/Audiowide/Audiowide-Regular.ttf", 120)
-fuente_titulo        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
-fuente_media         = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
-fuente_menu_media    = pygame.font.Font("assets/Fonts/Audiowide,Lato/Audiowide/Audiowide-Regular.ttf", 50)
-fuente_normal        = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
-fuente_pequena       = pygame.font.Font("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 20)
-fuente_puntos        = pygame.font.Font("assets/Fonts/Audiowide,Lato/Lato/Lato-Thin.ttf", 20)
+fuente_titulo_grande = cargar_fuente_segura("assets/Fonts/Audiowide,Lato/Audiowide/Audiowide-Regular.ttf", 120)
+fuente_titulo        = cargar_fuente_segura("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 80)
+fuente_media         = cargar_fuente_segura("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 50)
+fuente_menu_media    = cargar_fuente_segura("assets/Fonts/Audiowide,Lato/Audiowide/Audiowide-Regular.ttf", 50)
+fuente_normal        = cargar_fuente_segura("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 30)
+fuente_pequena       = cargar_fuente_segura("assets/Fonts/Silkscreen/Silkscreen-Regular.ttf", 20)
+fuente_puntos        = cargar_fuente_segura("assets/Fonts/Audiowide,Lato/Lato/Lato-Thin.ttf", 20)
 
 # Pantalla de carga
 carga = fuente_normal.render("Cargando...", False, (255, 255, 255))
@@ -1892,8 +1940,6 @@ pagina_actual_album  = 0
 album_puntajes_clave = ""
 fotos_album_puntajes = []
 
-total_paginas = len(calcular_posiciones_pagina(astros))
-
 scores = []
 nombres_existentes = set()
 datos_scores = cargar_scores()
@@ -2040,31 +2086,8 @@ def _guardar_sesion():
     ahora    = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     descubiertos = list(sesion_astros_descubiertos)
 
-    if nombre_jugador not in datos["jugadores"]:
-        datos["jugadores"][nombre_jugador] = {
-            "puntuacion_total": 0, "nivel_maximo": 0,
-            "astros_descubiertos": [], "fecha_hora": "", "cantidad_partidas": 0,
-        }
-    p = datos["jugadores"][nombre_jugador]
-    p["cantidad_partidas"] += 1
-    if sesion_mejor_puntuacion > p["puntuacion_total"]:
-        p["puntuacion_total"]     = sesion_mejor_puntuacion
-        p["nivel_maximo"]         = sesion_mejor_nivel
-        p["astros_descubiertos"]  = descubiertos
-        p["fecha_hora"]           = ahora
-
-    datos["partidas"].append({
-        "nombre": nombre_jugador, "puntuacion_total": sesion_mejor_puntuacion,
-        "nivel_maximo": sesion_mejor_nivel, "astros_descubiertos": descubiertos, "fecha_hora": ahora,
-    })
-    sorted_p = sorted(datos["jugadores"].items(), key=lambda x: x[1]["puntuacion_total"], reverse=True)
-    datos["top_scores"] = [{"nombre": k, "puntos": v["puntuacion_total"]} for k, v in sorted_p]
-
-    try:
-        with open('data/scores.json', 'w') as f:
-            json.dump(datos, f, indent=4)
-    except OSError:
-        print("ERROR: No se pudo guardar la sesión")
+    _registrar_resultado_jugador(datos, sesion_mejor_puntuacion, sesion_mejor_nivel, descubiertos, ahora)
+    _persistir_scores(datos, "la sesión")
 
 
 def eventos_felicitacion(event):
@@ -2169,10 +2192,7 @@ while True:
     # ---- Eventos ----
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            if nombre_jugador:
-                guardar_puntuacion()
-            pygame.quit()
-            exit()
+            salir_juego()
 
         if   estado_actual == ESTADO_MENU:             eventos_menu(event)
         elif estado_actual == ESTADO_PUNTAJES:         eventos_puntajes(event)

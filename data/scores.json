@@ -1416,6 +1416,54 @@
             ],
             "fecha_hora": "2026-06-17 17:46:21",
             "cantidad_partidas": 1
+        },
+        "da": {
+            "puntuacion_total": 19700,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Exoplaneta",
+                "Venus",
+                "Mercurio",
+                "Galaxia",
+                "Estacion",
+                "Marte",
+                "Urano",
+                "Agujero De Gusano",
+                "Luna",
+                "Jupiter",
+                "Nebulosa",
+                "Neptuno",
+                "AgujeroNegro",
+                "Saturno",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-06-17 17:59:12",
+            "cantidad_partidas": 1
+        },
+        "claude1": {
+            "puntuacion_total": 19700,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Venus",
+                "Estrella",
+                "Exoplaneta",
+                "Galaxia",
+                "Estacion",
+                "AgujeroNegro",
+                "Urano",
+                "Nebulosa",
+                "Neptuno",
+                "Marte",
+                "Luna",
+                "CometaHalley",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Jupiter",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-06-17 18:16:35",
+            "cantidad_partidas": 1
         }
     },
     "partidas": [
@@ -2931,6 +2979,54 @@
                 "Luna"
             ],
             "fecha_hora": "2026-06-17 17:46:21"
+        },
+        {
+            "nombre": "da",
+            "puntuacion_total": 19700,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "CometaHalley",
+                "Exoplaneta",
+                "Venus",
+                "Mercurio",
+                "Galaxia",
+                "Estacion",
+                "Marte",
+                "Urano",
+                "Agujero De Gusano",
+                "Luna",
+                "Jupiter",
+                "Nebulosa",
+                "Neptuno",
+                "AgujeroNegro",
+                "Saturno",
+                "Estrella"
+            ],
+            "fecha_hora": "2026-06-17 17:59:12"
+        },
+        {
+            "nombre": "claude1",
+            "puntuacion_total": 19700,
+            "nivel_maximo": 5,
+            "astros_descubiertos": [
+                "Venus",
+                "Estrella",
+                "Exoplaneta",
+                "Galaxia",
+                "Estacion",
+                "AgujeroNegro",
+                "Urano",
+                "Nebulosa",
+                "Neptuno",
+                "Marte",
+                "Luna",
+                "CometaHalley",
+                "Mercurio",
+                "Agujero De Gusano",
+                "Jupiter",
+                "Saturno"
+            ],
+            "fecha_hora": "2026-06-17 18:16:35"
         }
     ],
     "top_scores": [
@@ -2989,6 +3085,14 @@
         {
             "nombre": "reve",
             "puntos": 19800
+        },
+        {
+            "nombre": "da",
+            "puntos": 19700
+        },
+        {
+            "nombre": "claude1",
+            "puntos": 19700
         },
         {
             "nombre": "falta",
