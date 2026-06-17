@@ -78,7 +78,8 @@ def escalar_proporcional(image, target_w, target_h):
 def escalar_rellenar(image, target_w, target_h):
     iw, ih = image.get_size()
     escala = max(target_w / iw, target_h / ih)
-    nw, nh = int(iw * escala), int(ih * escala)
+    nw = max(int(iw * escala), target_w)
+    nh = max(int(ih * escala), target_h)
     scaled = pygame.transform.smoothscale(image, (nw, nh))
     cx, cy = (nw - target_w) // 2, (nh - target_h) // 2
     return scaled.subsurface((cx, cy, target_w, target_h)).copy()
@@ -131,7 +132,7 @@ def dibujar_rect_punteado(superficie, color, rect, dash=8):
 
 _glow_cache: dict = {}
 
-def dibujar_boton(pantalla, fuente, texto, rect_base, y_center, right_edge=None,
+def dibujar_boton(pantalla, fuente, texto, y_center, right_edge=None,
                   color_fondo=(100, 0, 180), left_edge=None, color_texto=(255, 255, 255)):
     """Dibuja un botón con hover y glow. Devuelve el rect final del botón."""
     surf_base = fuente.render(texto, False, color_texto)
@@ -580,9 +581,11 @@ def guardar_puntuacion():
     sorted_p = sorted(datos["jugadores"].items(), key=lambda x: x[1]["puntuacion_total"], reverse=True)
     datos["top_scores"] = [{"nombre": k, "puntos": v["puntuacion_total"]} for k, v in sorted_p]
 
-    with open('data/scores.json', 'w') as f:
-        json.dump(datos, f, indent=4)
-    scores = datos["top_scores"]
+    try:
+        with open('data/scores.json', 'w') as f:
+            json.dump(datos, f, indent=4)
+    except OSError:
+        print("ERROR: No se pudo guardar la puntuación")
 
 
 def cargar_assets_reales():
@@ -796,11 +799,11 @@ def mostrar_menu():
     pantalla.blit(instruccion, instruccion.get_rect(center=(ANCHO // 2, ALTO // 2 + 140)))
 
     boton_salir_rect = dibujar_boton(pantalla, fuente_normal, "SALIR (ESC)",
-                                     None, titulo_rect.centery, ANCHO - 20,
+                                     titulo_rect.centery, ANCHO - 20,
                                      color_fondo=(99, 207, 194),
                                      color_texto=(0, 0, 0))
     boton_puntajes_rect = dibujar_boton(pantalla, fuente_normal, "PUNTAJES",
-                                        None, titulo_rect.centery, ANCHO - 20,
+                                        titulo_rect.centery, ANCHO - 20,
                                         left_edge=20,
                                         color_fondo=(99, 207, 194),
                                         color_texto=(0, 0, 0))
@@ -821,7 +824,7 @@ def mostrar_puntajes():
 
     titulo = fuente_titulo.render("PUNTAJES", False, (255, 255, 255))
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 50)))
-    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 50, ANCHO - 20,
+    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", 50, ANCHO - 20,
                                       color_fondo=(99, 207, 194), color_texto=(0, 0, 0))
 
     y_inicio, alto_entrada = 110, 80
@@ -900,7 +903,7 @@ def mostrar_album_puntajes():
 
     titulo = fuente_titulo.render(f"Álbum de {album_puntajes_clave}", False, (255, 215, 0))
     pantalla.blit(titulo, titulo.get_rect(center=(ANCHO // 2, 110)))
-    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", None, 40, ANCHO - 20,
+    boton_volver_rect = dibujar_boton(pantalla, fuente_normal, "VOLVER (M)", 40, ANCHO - 20,
                                       color_fondo=(99, 207, 194), color_texto=(0, 0, 0))
 
     img_uibook_rect = img_uibook.get_rect(center=(ANCHO // 2, 420))
@@ -1212,13 +1215,6 @@ def _dibujar_instruccion_reporte():
         pantalla.blit(t_right, t_right.get_rect(left=x + t_left.get_width() + 8 + img_sp.get_width() + 8, centery=140))
 
 
-def _blit_con_icono_mouse(texto):
-    r = texto.get_rect(center=(ANCHO // 2, 140))
-    pantalla.blit(texto, r)
-    icono = img_mouse_icon
-    pantalla.blit(icono, icono.get_rect(midright=(r.left - 10, r.centery)))
-
-
 # ---------------------------------------------------------------------------
 # Pantallas: tutoriales
 # ---------------------------------------------------------------------------
@@ -1491,7 +1487,7 @@ def eventos_album_puntajes(event):
 
 def eventos_jugando(event):
     global fotos, flash_activo, flash_tiempo, puntuacion, puntuacion_total_partida
-    global tiempo_pausado, tipo_pausa, tiempo_fotos_agotadas
+    global tiempo_pausado, tipo_pausa
 
     if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not tiempo_pausado:
         fotos -= 1
@@ -1502,11 +1498,9 @@ def eventos_jugando(event):
         if (nivel == 5 and objetivo_actual() <= 0) or (nivel != 5 and puntuacion >= objetivo_actual()):
             tiempo_pausado       = True
             tipo_pausa           = "objetivo"
-            tiempo_fotos_agotadas = pygame.time.get_ticks()
         elif fotos <= 0:
             tiempo_pausado       = True
             tipo_pausa           = "fotos"
-            tiempo_fotos_agotadas = pygame.time.get_ticks()
 
 
 def _solicitar_slide_pagina(direccion, total_pags, slide_solicitada, pagina_actual_val):
@@ -1816,9 +1810,14 @@ _surf_overlay = None   # overlay oscuro del reporte
 
 # Datos
 astros = []
-with open("data/astros.json", "r") as f:
-    for item in json.load(f)["astros"]:
-        astros.append(item)
+try:
+    with open("data/astros.json", "r") as f:
+        for item in json.load(f)["astros"]:
+            astros.append(item)
+except (FileNotFoundError, json.JSONDecodeError, KeyError):
+    print("ERROR: No se pudo cargar data/astros.json")
+    pygame.quit()
+    exit(1)
 
 # ---------------------------------------------------------------------------
 # Estado global del juego
@@ -1869,7 +1868,6 @@ flash_activo = False
 flash_tiempo = 0
 
 tiempo_pausado        = False
-tiempo_fotos_agotadas = 0
 tipo_pausa            = ""
 ticks_inicio_juego    = 0
 
@@ -1915,8 +1913,6 @@ def mostrar_felicitacion():
     """Pantalla de celebración al completar el nivel 5."""
     global felicitacion_boton_jugar_rect, felicitacion_boton_menu_rect
     t     = pygame.time.get_ticks() / 1000
-    since = pygame.time.get_ticks() - felicitacion_ticks
-
     # --- Fondo: destellos de estrellas ---
     if not hasattr(mostrar_felicitacion, '_stars'):
         mostrar_felicitacion._stars = [
@@ -2064,9 +2060,11 @@ def _guardar_sesion():
     sorted_p = sorted(datos["jugadores"].items(), key=lambda x: x[1]["puntuacion_total"], reverse=True)
     datos["top_scores"] = [{"nombre": k, "puntos": v["puntuacion_total"]} for k, v in sorted_p]
 
-    with open('data/scores.json', 'w') as f:
-        json.dump(datos, f, indent=4)
-    scores = datos["top_scores"]
+    try:
+        with open('data/scores.json', 'w') as f:
+            json.dump(datos, f, indent=4)
+    except OSError:
+        print("ERROR: No se pudo guardar la sesión")
 
 
 def eventos_felicitacion(event):
